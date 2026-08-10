@@ -1,0 +1,4 @@
+.worktrees/
+target/
+*.class
+.DS_Store
