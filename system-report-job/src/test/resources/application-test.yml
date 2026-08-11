@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: system-report-job-test
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+  quartz:
+    job-store-type: memory
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
