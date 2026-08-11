@@ -28,6 +28,11 @@
 - `testcontainers.version` must be `1.21.4`, not `1.20.4` — 1.20.4's bundled docker-java fails to negotiate with OrbStack's Docker Engine (`MinAPIVersion 1.40`) and reports "client version 1.32 is too old". Task 9 raises this version in `pom.xml`; it was `1.20.4` from Task 1 only because this incompatibility wasn't known yet.
 - Spring Boot 4.1 moved Flyway autoconfiguration out of the core autoconfigure jar into a dedicated `org.springframework.boot:spring-boot-starter-flyway` module — without it, `flyway-core`/`flyway-database-postgresql` sit on the classpath but no `Flyway` bean is ever created and migrations silently never run (no error, no log line). Task 9 adds this starter to `pom.xml`.
 - Any `@SpringBootTest` dispatched before Task 17 (which is when the last usecase out-port, `JobActionExecutorPort`, gets its first real adapter) boots the **entire** `com.corebanking.systemreportjob` component-scanned context, including every `@Service` from Tasks 5-8 — and those constructors need `TaskRepositoryPort`, `JobDefinitionRepositoryPort`, `TaskExecutionHistoryRepositoryPort`, `SchedulerGatewayPort`, and `JobActionExecutorPort` satisfied. Until each port has a real adapter, any bare `@SpringBootTest` in this plan (Tasks 9, 14) must `@MockitoBean` all five out-ports so the context can start. Tasks 15 and 16 already sidestep this by `@MockitoBean`-ing `ExecuteScheduledJobUseCase` (which replaces the one bean — `JobExecutionOrchestrator` — that would otherwise need the still-missing `JobActionExecutorPort`), so they need no further change.
+- **General pattern (found in Tasks 9 and 10, applies everywhere below):** Spring Boot 4.1 split the old monolithic `spring-boot-test-autoconfigure` jar into many per-feature modules, each with its own dedicated starter and a *new package* for the annotation. `spring-boot-starter-test` alone no longer carries `@DataJpaTest`, `@WebMvcTest`, `@AutoConfigureMockMvc`, etc. This plan's task text has already been corrected everywhere it appears:
+  - `@DataJpaTest` → `org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest` (needs `spring-boot-starter-data-jpa-test`, added in Task 10 — Tasks 11-12 reuse it).
+  - `@AutoConfigureTestDatabase` → `org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase` (same starter as above).
+  - `@WebMvcTest` / `@AutoConfigureMockMvc` → `org.springframework.boot.webmvc.test.autoconfigure.{WebMvcTest,AutoConfigureMockMvc}` (needs `spring-boot-starter-webmvc-test`, added in Task 21 — Tasks 22, 23, 25 reuse it).
+  - If a later task hits the same "class/package doesn't exist" error for some *other* `@Data*Test`-style annotation not listed here, this is why — look for a same-named `spring-boot-starter-<feature>-test` module in the local `.m2` repository before assuming the brief is wrong in some other way.
 
 ---
 
@@ -2029,8 +2034,8 @@ import com.corebanking.systemreportjob.domain.model.JobDefinition;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.autoconfigure.orm.jpa.AutoConfigureTestDatabase;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -2263,8 +2268,8 @@ import java.time.LocalTime;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
@@ -2559,8 +2564,8 @@ import java.time.Instant;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
@@ -4131,11 +4136,12 @@ git commit -m "feat(system-report-job): add common web infra (ApiResponse, PageR
 - Create: `system-report-job/src/main/java/com/corebanking/systemreportjob/infrastructure/web/dto/response/JobDefinitionResponse.java`
 - Create: `system-report-job/src/main/java/com/corebanking/systemreportjob/infrastructure/web/dto/response/TaskDetailResponse.java`
 - Create: `system-report-job/src/main/java/com/corebanking/systemreportjob/infrastructure/web/controller/TaskController.java`
+- Modify: `system-report-job/pom.xml` (`spring-boot-starter-webmvc-test` — see Step 3)
 - Test: `system-report-job/src/test/java/com/corebanking/systemreportjob/infrastructure/web/controller/TaskControllerTest.java`
 
 **Interfaces:**
 - Consumes: `TaskManagementUseCase`, `CreateTaskCommand` (Task 4), `ScheduledTask`/`TriggerDefinition`/`TaskDetail` (Task 2), `ApiResponse`/`PageResponse`/`GlobalExceptionHandler`/`@ValidCron` (Task 20).
-- Produces: `JobDefinitionResponse.from(JobDefinition): JobDefinitionResponse` — reused as-is by Task 22 (do not create a second copy there).
+- Produces: `JobDefinitionResponse.from(JobDefinition): JobDefinitionResponse` — reused as-is by Task 22 (do not create a second copy there). The `pom.xml` `spring-boot-starter-webmvc-test` addition applies to the whole project — Tasks 22, 23, 25 need no further `pom.xml` change for `@WebMvcTest`/`@AutoConfigureMockMvc`.
 
 - [ ] **Step 1: Create `CreateTaskRequest.java`**
 
@@ -4211,7 +4217,17 @@ public record TaskDetailResponse(TaskResponse task, JobDefinitionResponse jobDef
 }
 ```
 
-- [ ] **Step 3: Write the failing test**
+- [ ] **Step 3: Add the `@WebMvcTest` test-slice dependency to `pom.xml`, then write the failing test** — Spring Boot 4.1 moved `@WebMvcTest`/`@AutoConfigureMockMvc` out of `spring-boot-starter-test` into a dedicated `spring-boot-starter-webmvc-test` module (the same pattern Task 9 hit for Flyway and Task 10 hit for `@DataJpaTest` — see Global Constraints). This is the first task in the plan using `@WebMvcTest`, so add the dependency now; Tasks 22, 23, and 25 reuse it with no further `pom.xml` change.
+
+In `system-report-job/pom.xml`, add (test scope):
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-webmvc-test</artifactId>
+    <scope>test</scope>
+</dependency>
+```
 
 ```java
 package com.corebanking.systemreportjob.infrastructure.web.controller;
@@ -4229,10 +4245,10 @@ import com.corebanking.systemreportjob.usecase.ports.in.TaskManagementUseCase;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(TaskController.class)
@@ -4463,7 +4479,7 @@ import com.corebanking.systemreportjob.usecase.ports.in.JobDefinitionUseCase;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
@@ -4639,7 +4655,7 @@ import com.corebanking.systemreportjob.usecase.ports.in.TaskHistoryQueryUseCase;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.MockMvc;
@@ -4849,7 +4865,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Duration;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
