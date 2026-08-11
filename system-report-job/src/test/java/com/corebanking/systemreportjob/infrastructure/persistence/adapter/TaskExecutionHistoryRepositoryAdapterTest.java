@@ -80,4 +80,15 @@ class TaskExecutionHistoryRepositoryAdapterTest {
         assertThat(result.content()).hasSize(1);
         assertThat(result.content().get(0).taskName()).isEqualTo("daily-report");
     }
+
+    @Test
+    void generatesIdWhenSavingRecordWithNullId() {
+        UUID taskId = persistTask();
+        TaskExecutionRecord record =
+                new TaskExecutionRecord(null, taskId, "daily-report", Instant.now(), Instant.now(), null);
+
+        TaskExecutionRecord saved = adapter.save(record);
+
+        assertThat(saved.id()).isNotNull();
+    }
 }
