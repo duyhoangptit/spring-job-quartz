@@ -2553,6 +2553,8 @@ public interface TaskExecutionHistoryJpaRepository extends JpaRepository<TaskExe
 
 - [ ] **Step 3: Write the failing test**
 
+`task_execution_history.task_id` has a real FK to `tasks(id)` (Task 9's `V4__create_task_execution_history.sql`). A record built with a random, never-persisted `taskId` looks fine on `save()`+`findById()` alone (no flush forced), but `search()` runs a JPQL query, which forces Hibernate's auto-flush and surfaces a `DataIntegrityViolationException` — the exact bug Task 11 hit and fixed with the same shape of test. This version already persists a real parent `TaskEntity` (which itself needs a real parent `JobDefinitionEntity`) first, so don't reintroduce the random-UUID version.
+
 ```java
 package com.corebanking.systemreportjob.infrastructure.persistence.adapter;
 
@@ -2560,6 +2562,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.corebanking.systemreportjob.domain.model.PageResult;
 import com.corebanking.systemreportjob.domain.model.TaskExecutionRecord;
+import com.corebanking.systemreportjob.infrastructure.persistence.entity.JobDefinitionEntity;
+import com.corebanking.systemreportjob.infrastructure.persistence.entity.TaskEntity;
+import com.corebanking.systemreportjob.infrastructure.persistence.repository.JobDefinitionJpaRepository;
+import com.corebanking.systemreportjob.infrastructure.persistence.repository.TaskJpaRepository;
 import java.time.Instant;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -2595,10 +2601,34 @@ class TaskExecutionHistoryRepositoryAdapterTest {
     @Autowired
     TaskExecutionHistoryRepositoryAdapter adapter;
 
+    @Autowired
+    TaskJpaRepository taskJpaRepository;
+
+    @Autowired
+    JobDefinitionJpaRepository jobDefinitionJpaRepository;
+
+    private UUID persistTask() {
+        JobDefinitionEntity jobDefinition = new JobDefinitionEntity();
+        jobDefinition.setId(UUID.randomUUID());
+        jobDefinition.setJobType("ECHO");
+        jobDefinitionJpaRepository.save(jobDefinition);
+
+        TaskEntity task = new TaskEntity();
+        task.setId(UUID.randomUUID());
+        task.setName("daily-report");
+        task.setTaskGroup("reports");
+        task.setJobDefinitionId(jobDefinition.getId());
+        task.setTriggerType("SIMPLE");
+        task.setIntervalInSeconds(60);
+        task.setRepeatCount(0);
+        return taskJpaRepository.save(task).getId();
+    }
+
     @Test
     void savesAndSearchesByTaskName() {
-        TaskExecutionRecord record = new TaskExecutionRecord(
-                UUID.randomUUID(), UUID.randomUUID(), "daily-report", Instant.now(), Instant.now(), null);
+        UUID taskId = persistTask();
+        TaskExecutionRecord record =
+                new TaskExecutionRecord(UUID.randomUUID(), taskId, "daily-report", Instant.now(), Instant.now(), null);
 
         adapter.save(record);
         PageResult<TaskExecutionRecord> result = adapter.search("daily", PageRequest.of(0, 10));
