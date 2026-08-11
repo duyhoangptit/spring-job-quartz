@@ -23,6 +23,12 @@
 - Build/test verification command for every task unless stated otherwise: `mvn -q -f /Users/tigerpro/Documents/SA/core-banking-10000tps/system-report-job/pom.xml test`.
 - Commit after each task from inside `/Users/tigerpro/Documents/SA/core-banking-10000tps` (the repo root), with `git add system-report-job/...`.
 
+**Corrections found during Task 9 execution (apply everywhere below, superseding what was originally written):**
+- Spring Boot 4.1 removed the legacy `@MockBean` (`org.springframework.boot.test.mock.mockito.MockBean`). Every test in this plan uses `@MockitoBean` (`org.springframework.test.context.bean.override.mockito.MockitoBean`) instead — same usage, different import/annotation name. All task text below has already been updated to `@MockitoBean`.
+- `testcontainers.version` must be `1.21.4`, not `1.20.4` — 1.20.4's bundled docker-java fails to negotiate with OrbStack's Docker Engine (`MinAPIVersion 1.40`) and reports "client version 1.32 is too old". Task 9 raises this version in `pom.xml`; it was `1.20.4` from Task 1 only because this incompatibility wasn't known yet.
+- Spring Boot 4.1 moved Flyway autoconfiguration out of the core autoconfigure jar into a dedicated `org.springframework.boot:spring-boot-starter-flyway` module — without it, `flyway-core`/`flyway-database-postgresql` sit on the classpath but no `Flyway` bean is ever created and migrations silently never run (no error, no log line). Task 9 adds this starter to `pom.xml`.
+- Any `@SpringBootTest` dispatched before Task 17 (which is when the last usecase out-port, `JobActionExecutorPort`, gets its first real adapter) boots the **entire** `com.corebanking.systemreportjob` component-scanned context, including every `@Service` from Tasks 5-8 — and those constructors need `TaskRepositoryPort`, `JobDefinitionRepositoryPort`, `TaskExecutionHistoryRepositoryPort`, `SchedulerGatewayPort`, and `JobActionExecutorPort` satisfied. Until each port has a real adapter, any bare `@SpringBootTest` in this plan (Tasks 9, 14) must `@MockitoBean` all five out-ports so the context can start. Tasks 15 and 16 already sidestep this by `@MockitoBean`-ing `ExecuteScheduledJobUseCase` (which replaces the one bean — `JobExecutionOrchestrator` — that would otherwise need the still-missing `JobActionExecutorPort`), so they need no further change.
+
 ---
 
 ## Phase 0 — Project scaffold
@@ -1549,10 +1555,12 @@ git commit -m "feat(system-report-job): implement JobExecutionOrchestrator"
 - Create: `system-report-job/src/main/resources/db/migration/V4__create_task_execution_history.sql`
 - Create: `system-report-job/src/main/java/com/corebanking/systemreportjob/infrastructure/persistence/entity/BaseEntity.java`
 - Create: `system-report-job/src/test/resources/application-test.yml`
+- Modify: `system-report-job/pom.xml` (dependency fixes — see Step 7)
+- Modify: `system-report-job/src/main/resources/application.yml` (Step 10)
 - Test: `system-report-job/src/test/java/com/corebanking/systemreportjob/infrastructure/persistence/FlywayMigrationTest.java`
 
 **Interfaces:**
-- Produces: 4 migrated tables (`QRTZ_*`, `job_definitions`, `tasks`, `task_execution_history`) and `BaseEntity` (`id: UUID`, `createdAt/updatedAt: Instant`, `isDeleted: boolean`) — every JPA entity in Tasks 10-12 extends `BaseEntity`. `src/test/resources/application-test.yml` is the shared Testcontainers-driven datasource config every persistence/E2E test in this plan uses (`@ActiveProfiles("test")` + `@Testcontainers`).
+- Produces: 4 migrated tables (`QRTZ_*`, `job_definitions`, `tasks`, `task_execution_history`) and `BaseEntity` (`id: UUID`, `createdAt/updatedAt: Instant`, `isDeleted: boolean`) — every JPA entity in Tasks 10-12 extends `BaseEntity`. `src/test/resources/application-test.yml` is the shared Testcontainers-driven datasource config every persistence/E2E test in this plan uses (`@ActiveProfiles("test")` + `@Testcontainers`). The `pom.xml` fixes (Step 7) apply to the whole project — no later task needs to touch `testcontainers.version` or the Flyway starter again.
 
 - [ ] **Step 1: Create `V1__create_quartz_tables.sql`** (standard Quartz JDBC JobStore schema, `QRTZ_` prefix — matches `application.yml`'s `tablePrefix` set in Task 24; diff against the exact Quartz version's official `tables_postgres.sql` before running in production)
 
@@ -1818,28 +1826,47 @@ management:
         include: health
 ```
 
-- [ ] **Step 7: Write the failing migration test**
+- [ ] **Step 7: Fix two dependency gaps in `pom.xml` found while building this task** — (a) bump `testcontainers.version` from `1.20.4` to `1.21.4`: 1.20.4's bundled docker-java cannot negotiate with OrbStack's Docker Engine (`MinAPIVersion 1.40`) and every Testcontainers-backed test in this plan fails at container startup with "client version 1.32 is too old"; (b) add `spring-boot-starter-flyway` — Spring Boot 4.1 moved Flyway autoconfiguration into this dedicated starter, so `flyway-core`/`flyway-database-postgresql` alone sit unused on the classpath: no `Flyway` bean is created, no error is logged, and migrations silently never run.
+
+In `system-report-job/pom.xml`:
+
+```xml
+<testcontainers.version>1.21.4</testcontainers.version>
+```
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-flyway</artifactId>
+</dependency>
+```
+
+- [ ] **Step 8: Write the failing migration test** — `@MockitoBean` the 5 usecase out-ports so the full `@SpringBootTest` context can boot even though no adapter for them exists until Tasks 10-12/15/17 (see Global Constraints)
 
 ```java
 package com.corebanking.systemreportjob.infrastructure.persistence;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.corebanking.systemreportjob.usecase.ports.out.JobActionExecutorPort;
+import com.corebanking.systemreportjob.usecase.ports.out.JobDefinitionRepositoryPort;
+import com.corebanking.systemreportjob.usecase.ports.out.SchedulerGatewayPort;
+import com.corebanking.systemreportjob.usecase.ports.out.TaskExecutionHistoryRepositoryPort;
+import com.corebanking.systemreportjob.usecase.ports.out.TaskRepositoryPort;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
+import javax.sql.DataSource;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-
-import javax.sql.DataSource;
-import org.springframework.beans.factory.annotation.Autowired;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -1855,6 +1882,22 @@ class FlywayMigrationTest {
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
     }
+
+    // No adapter implements these yet (Tasks 10-12/15/17) — mocked so the full context can boot.
+    @MockitoBean
+    TaskRepositoryPort taskRepositoryPort;
+
+    @MockitoBean
+    JobDefinitionRepositoryPort jobDefinitionRepositoryPort;
+
+    @MockitoBean
+    TaskExecutionHistoryRepositoryPort taskExecutionHistoryRepositoryPort;
+
+    @MockitoBean
+    SchedulerGatewayPort schedulerGatewayPort;
+
+    @MockitoBean
+    JobActionExecutorPort jobActionExecutorPort;
 
     @Autowired
     DataSource dataSource;
@@ -1878,12 +1921,12 @@ class FlywayMigrationTest {
 }
 ```
 
-- [ ] **Step 8: Run test to verify it fails**
+- [ ] **Step 9: Run test to verify it fails**
 
 Run: `mvn -q -f /Users/tigerpro/Documents/SA/core-banking-10000tps/system-report-job/pom.xml test -Dtest=FlywayMigrationTest`
-Expected: fails to start Spring context — no `application.yml` datasource/flyway wiring yet (that lands fully in Task 24, but Testcontainers' `@DynamicPropertySource` supplies the connection details here already, so the failure at this point is Flyway not finding the migration files' expected default location, or `spring.datasource.driver-class-name` missing). Confirm the failure message mentions Flyway or datasource, not an assertion failure — that confirms the test harness itself is correctly wired to what step 9-10 build.
+Expected: fails to start Spring context — no `application.yml` datasource/flyway wiring yet (that lands fully in Task 24, but Testcontainers' `@DynamicPropertySource` supplies the connection details here already, so the failure at this point is Flyway not finding the migration files' expected default location, or `spring.datasource.driver-class-name` missing). Confirm the failure message mentions Flyway or datasource, not an assertion failure — that confirms the test harness itself is correctly wired to what step 10-11 build.
 
-- [ ] **Step 9: Add the minimum root `application.yml` datasource+flyway block needed for this test** (full production block, including Quartz clustering and actuator restrictions, is completed in Task 24 — this step only unblocks Flyway so persistence tests can run from here on)
+- [ ] **Step 10: Add the minimum root `application.yml` datasource+flyway block needed for this test** (full production block, including Quartz clustering and actuator restrictions, is completed in Task 24 — this step only unblocks Flyway so persistence tests can run from here on)
 
 Edit `system-report-job/src/main/resources/application.yml`, replacing its content with:
 
@@ -1901,17 +1944,21 @@ spring:
     enabled: true
 ```
 
-- [ ] **Step 10: Run test to verify it passes**
+- [ ] **Step 11: Run test to verify it passes**
 
 Run: `mvn -q -f /Users/tigerpro/Documents/SA/core-banking-10000tps/system-report-job/pom.xml test -Dtest=FlywayMigrationTest`
-Expected: `Tests run: 1, Failures: 0, Errors: 0` (Testcontainers pulls `postgres:16-alpine` on first run — allow extra time).
+Expected: `Tests run: 1, Failures: 0, Errors: 0` (Testcontainers pulls `postgres:16-alpine` on first run — allow extra time). Startup logs should show `o.f.core.internal.command.DbMigrate` applying versions 1-4.
 
-- [ ] **Step 11: Commit**
+- [ ] **Step 12: Commit**
 
 ```bash
 cd /Users/tigerpro/Documents/SA/core-banking-10000tps
 git add system-report-job/
-git commit -m "feat(system-report-job): add Flyway migrations (Quartz + domain tables) and BaseEntity"
+git commit -m "feat(system-report-job): add Flyway migrations (Quartz + domain tables) and BaseEntity
+
+Also bumps testcontainers.version to 1.21.4 (OrbStack Docker API compat) and
+adds spring-boot-starter-flyway (Spring Boot 4.1 split Flyway autoconfig into
+its own starter — without it flyway-core sits unused and migrations never run)."
 ```
 
 ### Task 10: `JobDefinition` persistence (entity + repository + adapter)
@@ -2825,13 +2872,18 @@ Registers the Spring-aware job factory (so `ScheduledJobExecutor`, Task 15, gets
 **Interfaces:**
 - Produces: `QuartzClusterConfig.AutowiringSpringBeanJobFactory` bean, and a `SchedulerFactoryBeanCustomizer` bean that Spring Boot's Quartz autoconfiguration applies to the auto-configured `Scheduler`/`SchedulerFactoryBean` — no other task references this class directly, but every test in this plan that boots a full Spring context relies on the `Scheduler` bean it configures.
 
-- [ ] **Step 1: Write the failing test**
+- [ ] **Step 1: Write the failing test** — `@MockitoBean` the 5 usecase out-ports for the same reason as Task 9's `FlywayMigrationTest` (see Global Constraints): no adapter implements them yet, and this test boots the full context.
 
 ```java
 package com.corebanking.systemreportjob.infrastructure.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.corebanking.systemreportjob.usecase.ports.out.JobActionExecutorPort;
+import com.corebanking.systemreportjob.usecase.ports.out.JobDefinitionRepositoryPort;
+import com.corebanking.systemreportjob.usecase.ports.out.SchedulerGatewayPort;
+import com.corebanking.systemreportjob.usecase.ports.out.TaskExecutionHistoryRepositoryPort;
+import com.corebanking.systemreportjob.usecase.ports.out.TaskRepositoryPort;
 import org.junit.jupiter.api.Test;
 import org.quartz.Scheduler;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -2839,6 +2891,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -2857,6 +2910,21 @@ class QuartzClusterConfigTest {
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
     }
+
+    @MockitoBean
+    TaskRepositoryPort taskRepositoryPort;
+
+    @MockitoBean
+    JobDefinitionRepositoryPort jobDefinitionRepositoryPort;
+
+    @MockitoBean
+    TaskExecutionHistoryRepositoryPort taskExecutionHistoryRepositoryPort;
+
+    @MockitoBean
+    SchedulerGatewayPort schedulerGatewayPort;
+
+    @MockitoBean
+    JobActionExecutorPort jobActionExecutorPort;
 
     @Autowired
     Scheduler scheduler;
@@ -2975,7 +3043,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -3001,7 +3069,7 @@ class QuartzSchedulerGatewayAdapterTest {
     @Autowired
     QuartzSchedulerGatewayAdapter adapter;
 
-    @MockBean
+    @MockitoBean
     ExecuteScheduledJobUseCase executeScheduledJobUseCase;
 
     private ScheduledTask sample() {
@@ -3223,7 +3291,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -3253,7 +3321,7 @@ class QuartzJobListenerTest {
     @Autowired
     TaskExecutionHistoryRepositoryPort historyRepositoryPort;
 
-    @MockBean
+    @MockitoBean
     ExecuteScheduledJobUseCase executeScheduledJobUseCase;
 
     private ScheduledTask sample(String name) {
@@ -4162,7 +4230,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -4174,7 +4242,7 @@ class TaskControllerTest {
     @Autowired
     MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     TaskManagementUseCase taskManagementUseCase;
 
     @Test
@@ -4396,7 +4464,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -4408,7 +4476,7 @@ class JobDefinitionControllerTest {
     @Autowired
     MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     JobDefinitionUseCase jobDefinitionUseCase;
 
     @Test
@@ -4572,7 +4640,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -4583,7 +4651,7 @@ class TaskHistoryControllerTest {
     @Autowired
     MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     TaskHistoryQueryUseCase taskHistoryQueryUseCase;
 
     @Test
