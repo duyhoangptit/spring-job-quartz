@@ -56,6 +56,22 @@ class QuartzSchedulerGatewayAdapterTest {
                 null);
     }
 
+    // A repeatCount=0 Simple trigger (as sample() builds) fires once ~immediately and then moves
+    // straight to COMPLETE — pausing it races the scheduler noticing and firing it before the pause
+    // takes effect. Repeats keep it in NORMAL between fires, so pause() reliably lands on a trigger
+    // that is still live.
+    private ScheduledTask sampleRepeating() {
+        return new ScheduledTask(
+                UUID.randomUUID(),
+                "repeating-task",
+                "test",
+                UUID.randomUUID(),
+                new TriggerDefinition.Simple(30, 10),
+                "UTC",
+                1,
+                null);
+    }
+
     @Test
     void scheduledTaskFiresAndInvokesUseCase() {
         ScheduledTask task = sample();
@@ -68,7 +84,7 @@ class QuartzSchedulerGatewayAdapterTest {
 
     @Test
     void pauseThenResumeChangesTriggerState() {
-        ScheduledTask task = sample();
+        ScheduledTask task = sampleRepeating();
         adapter.scheduleTask(task);
 
         adapter.pauseTask(task.id());
