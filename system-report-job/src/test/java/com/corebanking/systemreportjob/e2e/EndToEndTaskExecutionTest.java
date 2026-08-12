@@ -80,6 +80,7 @@ class EndToEndTaskExecutionTest {
         await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> mockMvc.perform(
                         get("/api/task-history/search").param("taskName", "e2e-task"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.data.length()", is(1))));
+                .andExpect(jsonPath("$.data.data.length()", is(1)))
+                .andExpect(jsonPath("$.data.data[0].taskName", is("e2e-task"))));
     }
 }
