@@ -4872,7 +4872,7 @@ spring:
 - [ ] **Step 3: Run the full test suite to confirm nothing regressed**
 
 Run: `mvn -q -f /Users/tigerpro/Documents/SA/core-banking-10000tps/system-report-job/pom.xml test`
-Expected: `BUILD SUCCESS`, every test from Tasks 2-23 still passes (Testcontainers-backed tests override `spring.datasource.*`/`spring.quartz.job-store-type` via `@DynamicPropertySource`/`application-test.yml`, so they're unaffected by this file).
+Expected: `BUILD SUCCESS`. **Correction found while executing this task:** the assumption that Testcontainers-backed tests are unaffected by this file turned out to be false — Spring Boot binds `spring.quartz.properties.*` as a flat `Map<String,String>` that merges *additively* across profile documents, so the raw `org.quartz.jobStore.*` keys this step adds to the base `application.yml` leak into `application-test.yml` even though that file sets its own `job-store-type: memory`, breaking `RAMJobStore` (no setters for the leaked JDBC-only keys). Fix: change `system-report-job/src/test/resources/application-test.yml`'s `spring.quartz.job-store-type` from `memory` to `jdbc` — every Quartz-context test already provisions a Testcontainers `PostgreSQLContainer` and runs the Flyway `V1__create_quartz_tables.sql` migration, so this just points Quartz at the database that's already there, and now genuinely exercises the JDBC job store path in tests instead of leaving it untested.
 
 - [ ] **Step 4: Commit**
 
