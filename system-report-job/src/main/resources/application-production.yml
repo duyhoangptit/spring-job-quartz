@@ -1,0 +1,7 @@
+spring:
+  quartz:
+    properties:
+      org:
+        quartz:
+          jobStore:
+            isClustered: true

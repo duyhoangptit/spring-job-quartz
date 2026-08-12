@@ -1,11 +1,56 @@
+server:
+  port: ${SERVER_PORT:9093}
+  servlet:
+    context-path: /system-report-job
+
 spring:
   application:
     name: system-report-job
   datasource:
     driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://${POSTGRESQL_HOST:localhost}:${POSTGRESQL_PORT:5432}/${POSTGRESQL_DB:db_system_report_job}
+    username: ${POSTGRESQL_USER:postgres}
+    password: ${POSTGRESQL_PASSWORD:root}
+    hikari:
+      connection-timeout: 60000
+      maximum-pool-size: 5
+      minimum-idle: 3
+      idle-timeout: 30000
+      max-lifetime: 1800000
+      pool-name: SystemReportJobHikariCP
+      connection-test-query: SELECT 1
   jpa:
     hibernate:
       ddl-auto: validate
     open-in-view: false
+    properties:
+      hibernate:
+        globally_quoted_identifiers: true
   flyway:
     enabled: true
+  quartz:
+    job-store-type: jdbc
+    jdbc:
+      initialize-schema: never
+    properties:
+      org:
+        quartz:
+          scheduler:
+            instanceName: SystemReportJobScheduler
+            instanceId: AUTO
+          jobStore:
+            class: org.springframework.scheduling.quartz.LocalDataSourceJobStore
+            driverDelegateClass: org.quartz.impl.jdbcjobstore.PostgreSQLDelegate
+            tablePrefix: QRTZ_
+            isClustered: ${QUARTZ_JOB_STORE_IS_CLUSTERED:false}
+            clusterCheckinInterval: 20000
+            useProperties: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized

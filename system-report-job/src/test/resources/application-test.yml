@@ -8,7 +8,7 @@ spring:
   flyway:
     enabled: true
   quartz:
-    job-store-type: memory
+    job-store-type: jdbc
 management:
   endpoints:
     web:
