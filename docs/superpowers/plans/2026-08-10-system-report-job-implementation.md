@@ -33,6 +33,10 @@
   - `@AutoConfigureTestDatabase` → `org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase` (same starter as above).
   - `@WebMvcTest` / `@AutoConfigureMockMvc` → `org.springframework.boot.webmvc.test.autoconfigure.{WebMvcTest,AutoConfigureMockMvc}` (needs `spring-boot-starter-webmvc-test`, added in Task 21 — Tasks 22, 23, 25 reuse it).
   - If a later task hits the same "class/package doesn't exist" error for some *other* `@Data*Test`-style annotation not listed here, this is why — look for a same-named `spring-boot-starter-<feature>-test` module in the local `.m2` repository before assuming the brief is wrong in some other way.
+- **Found in Task 18 (main-code, not test-only, applies to whole project going forward):** Spring Boot 4.1 defaults to **Jackson 3** (`tools.jackson.databind.*`) — `spring-boot-starter-web` now pulls `spring-boot-starter-jackson` (Jackson 3), not the classic Jackson 2 stack, and no `com.fasterxml.jackson.databind.ObjectMapper` bean is auto-configured by default. Separately, `RestClient.Builder` autoconfiguration (`RestClientAutoConfiguration`) moved out of `spring-boot-autoconfigure` into its own module. Task 18 added, to `pom.xml`:
+  - `org.springframework.boot:spring-boot-starter-restclient` — restores the `RestClient.Builder` bean.
+  - `org.springframework.boot:spring-boot-jackson2` (raw module — no dedicated starter exists for it) — restores a `com.fasterxml.jackson.databind.ObjectMapper` bean, needed because this plan's code (`HttpCallJobAction`, and Task 25's end-to-end test) uses the classic Jackson 2 API directly, not Jackson 3.
+  - Both are managed by the `spring-boot-starter-parent:4.1.0` BOM (no explicit `<version>` needed). This is a one-time, project-wide `pom.xml` fix — no later task should need to touch it again for this reason. If a `@WebMvcTest` controller test (Tasks 21-23) shows unexpected JSON serialization/content-type behavior, this Jackson 2/3 coexistence is the first thing to check.
 
 ---
 
