@@ -38,6 +38,9 @@ spring:
           scheduler:
             instanceName: SystemReportJobScheduler
             instanceId: AUTO
+          threadPool:
+            # Số worker thread chạy job đồng thời (trước đây dùng ngầm định 10 của Quartz).
+            threadCount: ${QUARTZ_THREAD_COUNT:10}
           jobStore:
             class: org.springframework.scheduling.quartz.LocalDataSourceJobStore
             driverDelegateClass: org.quartz.impl.jdbcjobstore.PostgreSQLDelegate
@@ -45,6 +48,15 @@ spring:
             isClustered: ${QUARTZ_JOB_STORE_IS_CLUSTERED:false}
             clusterCheckinInterval: 20000
             useProperties: true
+
+app:
+  http-client:
+    # Timeout cho RestClient dùng trong job action (tránh treo worker thread của Quartz).
+    connect-timeout: 5s
+    read-timeout: 25s
+  job-action:
+    # Thời gian tối đa chờ một job action hoàn tất trước khi huỷ và báo lỗi.
+    execution-timeout: 30s
 
 management:
   endpoints:

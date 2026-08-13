@@ -84,13 +84,20 @@ public class TaskController {
     }
 
     private CreateTaskCommand toCommand(CreateTaskRequest request) {
+        String triggerType = request.triggerType().toUpperCase();
         TriggerDefinition trigger =
-                switch (request.triggerType().toUpperCase()) {
-                    case "CRON" -> new TriggerDefinition.Cron(request.cronExpression());
-                    case "SIMPLE" -> new TriggerDefinition.Simple(request.intervalInSeconds(), request.repeatCount());
-                    case "CALENDAR_INTERVAL" -> new TriggerDefinition.CalendarInterval(request.intervalInDays());
+                switch (triggerType) {
+                    case "CRON" -> new TriggerDefinition.Cron(
+                            require(request.cronExpression(), "cronExpression", triggerType));
+                    case "SIMPLE" -> new TriggerDefinition.Simple(
+                            require(request.intervalInSeconds(), "intervalInSeconds", triggerType),
+                            require(request.repeatCount(), "repeatCount", triggerType));
+                    case "CALENDAR_INTERVAL" -> new TriggerDefinition.CalendarInterval(
+                            require(request.intervalInDays(), "intervalInDays", triggerType));
                     case "DAILY_TIME_INTERVAL" -> new TriggerDefinition.DailyTimeInterval(
-                            request.startingDailyAt(), request.endingDailyAt(), request.intervalInMinutes());
+                            require(request.startingDailyAt(), "startingDailyAt", triggerType),
+                            require(request.endingDailyAt(), "endingDailyAt", triggerType),
+                            require(request.intervalInMinutes(), "intervalInMinutes", triggerType));
                     default -> throw new IllegalArgumentException("Unknown triggerType: " + request.triggerType());
                 };
         return new CreateTaskCommand(
@@ -101,5 +108,13 @@ public class TaskController {
                 request.timezoneId(),
                 request.priority(),
                 request.description());
+    }
+
+    /** Các field payload của trigger là optional trong DTO — thiếu thì trả 400 thay vì NPE/500. */
+    private static <T> T require(T value, String field, String triggerType) {
+        if (value == null) {
+            throw new IllegalArgumentException(field + " là bắt buộc với triggerType " + triggerType);
+        }
+        return value;
     }
 }

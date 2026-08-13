@@ -10,4 +10,6 @@ import com.corebanking.systemreportjob.infrastructure.persistence.entity.TaskEnt
 
 public interface TaskJpaRepository extends JpaRepository<TaskEntity, UUID> {
     Page<TaskEntity> findByNameContainingIgnoreCase(String name, Pageable pageable);
+
+    boolean existsByJobDefinitionId(UUID jobDefinitionId);
 }

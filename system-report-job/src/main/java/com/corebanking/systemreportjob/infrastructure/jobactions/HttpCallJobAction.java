@@ -1,11 +1,16 @@
 package com.corebanking.systemreportjob.infrastructure.jobactions;
 
+import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -23,14 +28,17 @@ public class HttpCallJobAction implements JobAction {
     private final RestClient restClient;
     private final ObjectMapper objectMapper;
     private final AsyncTaskExecutor jobActionTaskExecutor;
+    private final Duration executionTimeout;
 
     public HttpCallJobAction(
             RestClient.Builder restClientBuilder,
             ObjectMapper objectMapper,
-            @Qualifier("jobActionTaskExecutor") AsyncTaskExecutor jobActionTaskExecutor) {
+            @Qualifier("jobActionTaskExecutor") AsyncTaskExecutor jobActionTaskExecutor,
+            @Value("${app.job-action.execution-timeout:30s}") Duration executionTimeout) {
         this.restClient = restClientBuilder.build();
         this.objectMapper = objectMapper;
         this.jobActionTaskExecutor = jobActionTaskExecutor;
+        this.executionTimeout = executionTimeout;
     }
 
     @Override
@@ -40,11 +48,17 @@ public class HttpCallJobAction implements JobAction {
 
     @Override
     public void execute(JobDefinition definition) {
+        Future<Void> future = jobActionTaskExecutor.submit(() -> callHttp(definition));
         try {
-            jobActionTaskExecutor.submit(() -> callHttp(definition)).get();
+            future.get(executionTimeout.toMillis(), TimeUnit.MILLISECONDS);
         } catch (ExecutionException e) {
             throw new IllegalStateException("HTTP_CALL job action thất bại: " + definition.id(), e.getCause());
+        } catch (TimeoutException e) {
+            future.cancel(true);
+            throw new IllegalStateException(
+                    "HTTP_CALL job action quá thời gian chờ (" + executionTimeout + "): " + definition.id(), e);
         } catch (InterruptedException e) {
+            future.cancel(true);
             Thread.currentThread().interrupt();
             throw new IllegalStateException("HTTP_CALL job action bị gián đoạn: " + definition.id(), e);
         }

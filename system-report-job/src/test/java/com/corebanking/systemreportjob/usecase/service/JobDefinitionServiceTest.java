@@ -11,21 +11,26 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.corebanking.systemreportjob.domain.exception.ErrorCode;
+import com.corebanking.systemreportjob.domain.exception.JobDefinitionInUseException;
 import com.corebanking.systemreportjob.domain.exception.JobDefinitionNotFoundException;
 import com.corebanking.systemreportjob.domain.model.JobDefinition;
 import com.corebanking.systemreportjob.usecase.ports.in.CreateJobDefinitionCommand;
 import com.corebanking.systemreportjob.usecase.ports.in.UpdateJobDefinitionCommand;
 import com.corebanking.systemreportjob.usecase.ports.out.JobDefinitionRepositoryPort;
+import com.corebanking.systemreportjob.usecase.ports.out.TaskRepositoryPort;
 
 class JobDefinitionServiceTest {
 
     private JobDefinitionRepositoryPort repositoryPort;
+    private TaskRepositoryPort taskRepositoryPort;
     private JobDefinitionService service;
 
     @BeforeEach
     void setUp() {
         repositoryPort = mock(JobDefinitionRepositoryPort.class);
-        service = new JobDefinitionService(repositoryPort);
+        taskRepositoryPort = mock(TaskRepositoryPort.class);
+        service = new JobDefinitionService(repositoryPort, taskRepositoryPort);
     }
 
     @Test
@@ -64,9 +69,23 @@ class JobDefinitionServiceTest {
     @Test
     void deleteDelegatesToRepositoryPort() {
         UUID id = UUID.randomUUID();
+        when(taskRepositoryPort.existsByJobDefinitionId(id)).thenReturn(false);
 
         service.delete(id);
 
         verify(repositoryPort).delete(id);
+    }
+
+    @Test
+    void deleteRejectedWhenStillReferencedByATask() {
+        UUID id = UUID.randomUUID();
+        when(taskRepositoryPort.existsByJobDefinitionId(id)).thenReturn(true);
+
+        assertThatThrownBy(() -> service.delete(id))
+                .isInstanceOf(JobDefinitionInUseException.class)
+                .extracting(e -> ((JobDefinitionInUseException) e).getErrorCode())
+                .isEqualTo(ErrorCode.JOB_DEFINITION_IN_USE);
+
+        verify(repositoryPort, never()).delete(any());
     }
 }

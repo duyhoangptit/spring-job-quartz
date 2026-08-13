@@ -87,6 +87,18 @@ class TaskRepositoryAdapterTest {
     }
 
     @Test
+    void existsByJobDefinitionIdSeesLiveTasksOnlyAfterSoftDelete() {
+        ScheduledTask saved = adapter.save(sample(new TriggerDefinition.Simple(60, 0)));
+
+        assertThat(adapter.existsByJobDefinitionId(saved.jobDefinitionId())).isTrue();
+        assertThat(adapter.existsByJobDefinitionId(UUID.randomUUID())).isFalse();
+
+        adapter.delete(saved.id());
+
+        assertThat(adapter.existsByJobDefinitionId(saved.jobDefinitionId())).isFalse();
+    }
+
+    @Test
     void deletedTaskIsNoLongerFound() {
         ScheduledTask saved = adapter.save(sample(new TriggerDefinition.Simple(60, 0)));
 

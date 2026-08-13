@@ -74,4 +74,45 @@ class TaskControllerTest {
     void pauseReturnsOk() throws Exception {
         mockMvc.perform(put("/api/tasks/pause/{id}", UUID.randomUUID())).andExpect(status().isOk());
     }
+
+    @Test
+    void createReturns400WhenSimpleTriggerMissesInterval() throws Exception {
+        mockMvc.perform(post("/api/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(
+                                """
+								{"name":"broken","group":"reports","jobDefinitionId":"%s","triggerType":"SIMPLE"}
+								"""
+                                        .formatted(UUID.randomUUID())))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("intervalInSeconds")));
+    }
+
+    @Test
+    void createReturns400WhenCronTriggerMissesExpression() throws Exception {
+        mockMvc.perform(post("/api/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(
+                                """
+								{"name":"broken","group":"reports","jobDefinitionId":"%s","triggerType":"CRON"}
+								"""
+                                        .formatted(UUID.randomUUID())))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("cronExpression")));
+    }
+
+    @Test
+    void createReturns400WhenTriggerTypeUnknown() throws Exception {
+        mockMvc.perform(post("/api/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(
+                                """
+								{"name":"broken","group":"reports","jobDefinitionId":"%s","triggerType":"NOPE"}
+								"""
+                                        .formatted(UUID.randomUUID())))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("NOPE")));
+    }
 }

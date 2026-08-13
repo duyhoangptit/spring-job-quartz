@@ -18,5 +18,7 @@ public interface TaskRepositoryPort {
 
     PageResult<ScheduledTask> search(String keyword, Pageable pageable);
 
+    boolean existsByJobDefinitionId(UUID jobDefinitionId);
+
     void delete(UUID id);
 }

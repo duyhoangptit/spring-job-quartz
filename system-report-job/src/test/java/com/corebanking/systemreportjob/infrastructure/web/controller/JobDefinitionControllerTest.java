@@ -2,12 +2,14 @@ package com.corebanking.systemreportjob.infrastructure.web.controller;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.UUID;
@@ -20,6 +22,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.corebanking.systemreportjob.domain.exception.JobDefinitionInUseException;
 import com.corebanking.systemreportjob.domain.model.JobDefinition;
 import com.corebanking.systemreportjob.infrastructure.common.GlobalExceptionHandler;
 import com.corebanking.systemreportjob.usecase.ports.in.JobDefinitionUseCase;
@@ -57,6 +60,18 @@ class JobDefinitionControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"jobType\":\"HTTP_CALL\",\"expression\":\"{}\"}"))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void deleteReturns409WhenJobDefinitionStillReferenced() throws Exception {
+        UUID id = UUID.randomUUID();
+        doThrow(new JobDefinitionInUseException(id)).when(jobDefinitionUseCase).delete(id);
+
+        mockMvc.perform(delete("/api/job-definitions/{id}", id))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.status").value(409))
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString(id.toString())));
     }
 
     @Test

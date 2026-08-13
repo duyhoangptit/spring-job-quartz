@@ -3,6 +3,7 @@ package com.corebanking.systemreportjob.infrastructure.scheduler;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.LocalTime;
+import java.util.TimeZone;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
@@ -20,7 +21,19 @@ class QuartzTriggerFactoryTest {
     private final QuartzTriggerFactory factory = new QuartzTriggerFactory();
 
     private ScheduledTask taskWith(TriggerDefinition trigger) {
-        return new ScheduledTask(UUID.randomUUID(), "t", "g", UUID.randomUUID(), trigger, "UTC", 5, null);
+        return taskWith(trigger, "UTC");
+    }
+
+    private ScheduledTask taskWith(TriggerDefinition trigger, String timezoneId) {
+        return new ScheduledTask(UUID.randomUUID(), "t", "g", UUID.randomUUID(), trigger, timezoneId, 5, null);
+    }
+
+    @Test
+    void buildsCronTriggerWithUtcWhenTimezoneIsNull() {
+        Trigger trigger = factory.build(taskWith(new TriggerDefinition.Cron("0 0 1 * * ?"), null));
+
+        assertThat(trigger).isInstanceOf(CronTrigger.class);
+        assertThat(((CronTrigger) trigger).getTimeZone()).isEqualTo(TimeZone.getTimeZone("UTC"));
     }
 
     @Test

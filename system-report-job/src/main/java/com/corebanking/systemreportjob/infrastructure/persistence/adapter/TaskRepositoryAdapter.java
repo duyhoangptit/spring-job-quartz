@@ -53,6 +53,11 @@ public class TaskRepositoryAdapter implements TaskRepositoryPort {
     }
 
     @Override
+    public boolean existsByJobDefinitionId(UUID jobDefinitionId) {
+        return jpaRepository.existsByJobDefinitionId(jobDefinitionId);
+    }
+
+    @Override
     public void delete(UUID id) {
         jpaRepository.deleteById(id);
     }

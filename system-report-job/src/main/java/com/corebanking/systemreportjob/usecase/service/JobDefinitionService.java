@@ -4,20 +4,24 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
+import com.corebanking.systemreportjob.domain.exception.JobDefinitionInUseException;
 import com.corebanking.systemreportjob.domain.exception.JobDefinitionNotFoundException;
 import com.corebanking.systemreportjob.domain.model.JobDefinition;
 import com.corebanking.systemreportjob.usecase.ports.in.CreateJobDefinitionCommand;
 import com.corebanking.systemreportjob.usecase.ports.in.JobDefinitionUseCase;
 import com.corebanking.systemreportjob.usecase.ports.in.UpdateJobDefinitionCommand;
 import com.corebanking.systemreportjob.usecase.ports.out.JobDefinitionRepositoryPort;
+import com.corebanking.systemreportjob.usecase.ports.out.TaskRepositoryPort;
 
 @Service
 public class JobDefinitionService implements JobDefinitionUseCase {
 
     private final JobDefinitionRepositoryPort repositoryPort;
+    private final TaskRepositoryPort taskRepositoryPort;
 
-    public JobDefinitionService(JobDefinitionRepositoryPort repositoryPort) {
+    public JobDefinitionService(JobDefinitionRepositoryPort repositoryPort, TaskRepositoryPort taskRepositoryPort) {
         this.repositoryPort = repositoryPort;
+        this.taskRepositoryPort = taskRepositoryPort;
     }
 
     @Override
@@ -36,6 +40,9 @@ public class JobDefinitionService implements JobDefinitionUseCase {
 
     @Override
     public void delete(UUID id) {
+        if (taskRepositoryPort.existsByJobDefinitionId(id)) {
+            throw new JobDefinitionInUseException(id);
+        }
         repositoryPort.delete(id);
     }
 }

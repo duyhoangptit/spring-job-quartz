@@ -18,6 +18,8 @@ import com.corebanking.systemreportjob.domain.model.TriggerDefinition;
 @Component
 public class QuartzTriggerFactory {
 
+    private static final String DEFAULT_TIMEZONE_ID = "UTC";
+
     public Trigger build(ScheduledTask task) {
         TriggerBuilder<Trigger> builder = TriggerBuilder.newTrigger()
                 .withIdentity(QuartzIdentifiers.triggerKey(task.id()))
@@ -29,7 +31,8 @@ public class QuartzTriggerFactory {
 
         return switch (task.trigger()) {
             case TriggerDefinition.Cron c -> builder.withSchedule(CronScheduleBuilder.cronSchedule(c.cronExpression())
-                            .inTimeZone(TimeZone.getTimeZone(task.timezoneId()))
+                            .inTimeZone(TimeZone.getTimeZone(
+                                    task.timezoneId() != null ? task.timezoneId() : DEFAULT_TIMEZONE_ID))
                             .withMisfireHandlingInstructionFireAndProceed())
                     .build();
             case TriggerDefinition.Simple s -> builder.withSchedule(SimpleScheduleBuilder.simpleSchedule()
