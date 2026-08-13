@@ -1,5 +1,5 @@
 server:
-  port: ${SERVER_PORT:9093}
+  port: ${SERVER_PORT:8080}
   servlet:
     context-path: /system-report-job
 
@@ -8,9 +8,9 @@ spring:
     name: system-report-job
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://${POSTGRESQL_HOST:localhost}:${POSTGRESQL_PORT:5432}/${POSTGRESQL_DB:db_system_report_job}
-    username: ${POSTGRESQL_USER:postgres}
-    password: ${POSTGRESQL_PASSWORD:root}
+    url: ${APP_DB_URL:jdbc:postgresql://postgres:5432/db_system_report_job}
+    username: ${APP_DB_USERNAME:tigerpro}
+    password: ${APP_DB_PASSWORD:secret}
     hikari:
       connection-timeout: 60000
       maximum-pool-size: 5

@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml" />
+
+    <!-- Redacts known-sensitive field values (password, token, otp, ...) out of every log line,
+         regardless of appender, so no call site has to remember to mask manually.
+         Registered for every built-in alias of the message conversion word (m/msg/message),
+         since a pattern using %m would otherwise bypass a rule registered only for %msg. -->
+    <conversionRule conversionWord="msg" class="com.corebanking.systemreportjob.shared.common.logging.MaskingMessageConverter" />
+    <conversionRule conversionWord="m" class="com.corebanking.systemreportjob.shared.common.logging.MaskingMessageConverter" />
+    <conversionRule conversionWord="message" class="com.corebanking.systemreportjob.shared.common.logging.MaskingMessageConverter" />
+
+    <springProperty scope="context" name="APP_NAME" source="spring.application.name" defaultValue="report-job" />
+    <springProperty scope="context" name="ROOT_LOG_LEVEL" source="logging.level.root" defaultValue="INFO" />
+    <springProperty scope="context" name="CONSOLE_LOG_PATTERN" source="logging.pattern.console"
+                    defaultValue="%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr([%thread]){magenta} %clr(%-5level) %clr([requestId:%X{requestId:-N/A}]){cyan} %clr(%logger{36}){yellow} %clr(-){faint} %msg%n%wEx" />
+    <springProperty scope="context" name="FILE_LOG_PATTERN" source="logging.pattern.file"
+                    defaultValue="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [requestId:%X{requestId:-N/A}] %logger{36} - %msg%n" />
+    <springProperty scope="context" name="LOG_FILE" source="logging.file.name" defaultValue="logs/application.log" />
+    <springProperty scope="context" name="JSON_LOG_FILE" source="app.logging.json.file.name" defaultValue="logs/application.json" />
+    <springProperty scope="context" name="JSON_EVENT_DATASET" source="app.logging.json.event.dataset" defaultValue="report-job.application" />
+    <springProperty scope="context" name="MAX_FILE_SIZE" source="app.logging.rolling.max-file-size" defaultValue="10MB" />
+    <springProperty scope="context" name="MAX_HISTORY" source="app.logging.rolling.max-history" defaultValue="14" />
+    <springProperty scope="context" name="TOTAL_SIZE_CAP" source="app.logging.rolling.total-size-cap" defaultValue="1GB" />
+
+    <contextName>${APP_NAME}</contextName>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_FILE}</file>
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>logs/application.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>${MAX_FILE_SIZE}</maxFileSize>
+            <maxHistory>${MAX_HISTORY}</maxHistory>
+            <totalSizeCap>${TOTAL_SIZE_CAP}</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+
+    <appender name="JSON_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${JSON_LOG_FILE}</file>
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp>
+                    <fieldName>@timestamp</fieldName>
+                </timestamp>
+                <version>
+                    <fieldName>@version</fieldName>
+                </version>
+                <!-- Sourced from the %msg conversion word (see conversionRule above) so the
+                     message field is masked the same way as the CONSOLE/FILE appenders. -->
+                <pattern>
+                    <pattern>{"message":"%msg"}</pattern>
+                </pattern>
+                <loggerName>
+                    <fieldName>log.logger</fieldName>
+                </loggerName>
+                <threadName>
+                    <fieldName>process.thread.name</fieldName>
+                </threadName>
+                <logLevel>
+                    <fieldName>log.level</fieldName>
+                </logLevel>
+                <logLevelValue>
+                    <fieldName>log.level_value</fieldName>
+                </logLevelValue>
+                <stackTrace>
+                    <fieldName>error.stack_trace</fieldName>
+                </stackTrace>
+                <mdc>
+                    <includeMdcKeyName>requestId</includeMdcKeyName>
+                    <mdcKeyFieldName>requestId=CORRELATION_ID</mdcKeyFieldName>
+                </mdc>
+                <provider class="net.logstash.logback.composite.GlobalCustomFieldsJsonProvider">
+                    <customFields>{"service":{"name":"${APP_NAME}"},"event":{"dataset":"${JSON_EVENT_DATASET}"},"labels":{"log_format":"ecs"}}</customFields>
+                </provider>
+            </providers>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>logs/application-json.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>${MAX_FILE_SIZE}</maxFileSize>
+            <maxHistory>${MAX_HISTORY}</maxHistory>
+            <totalSizeCap>${TOTAL_SIZE_CAP}</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+
+    <root level="${ROOT_LOG_LEVEL}">
+        <appender-ref ref="CONSOLE" />
+        <appender-ref ref="FILE" />
+        <appender-ref ref="JSON_FILE" />
+    </root>
+</configuration>

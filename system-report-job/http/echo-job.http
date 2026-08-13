@@ -1,0 +1,61 @@
+### system-report-job — tạo & chạy thử JobDefinition kiểu ECHO (EchoInProcessJobAction),
+### trigger CRON "mỗi phút chạy 1 lần". Chạy tuần tự từng block (IntelliJ HTTP Client /
+### VS Code REST Client đều hỗ trợ chaining `{{requestName.response.body.$.jsonpath}}`).
+###
+### Trước khi chạy: `mvn spring-boot:run` (xem README) — mặc định lắng nghe :8080,
+### context-path /system-report-job.
+
+@baseUrl = http://localhost:8888/system-report-job
+
+### 1. Tạo JobDefinition jobType=ECHO — EchoInProcessJobAction chỉ log ra
+###    `expression`, không gọi HTTP ra ngoài nên an toàn để test nhanh.
+# @name createJobDefinition
+POST {{baseUrl}}/api/job-definitions
+Content-Type: application/json
+
+{
+  "jobType": "ECHO",
+  "expression": "{\"msg\":\"hello from echo job\"}",
+  "description": "Echo job dùng để test thủ công"
+}
+
+### 2. Tạo Task tham chiếu JobDefinition ở trên, trigger CRON "0 * * * * ?"
+###    (Quartz cron 6 field: giây=0 → bắn 1 lần mỗi phút, đúng vào đầu phút).
+# @name createTask
+POST {{baseUrl}}/api/tasks
+Content-Type: application/json
+
+{
+  "name": "echo-every-minute",
+  "group": "manual-test",
+  "jobDefinitionId": "0104866d-ea73-46f8-96d8-f7cff5fab7cf",
+  "triggerType": "CRON",
+  "cronExpression": "0 * * * * ?",
+  "timezoneId": "Asia/Ho_Chi_Minh",
+  "priority": 5,
+  "description": "Echo mỗi phút"
+}
+
+### 3. Start task — từ đây Quartz mới thực sự lên lịch trigger (create không tự start).
+# @name startTask
+POST {{baseUrl}}/api/tasks/start/d5b1d30c-4437-45b0-8708-250262d877e4
+
+### 4. Xem chi tiết task + trạng thái trigger hiện tại (NORMAL sau khi start).
+GET {{baseUrl}}/api/tasks/d5b1d30c-4437-45b0-8708-250262d877e4
+
+### 5. Đợi ít nhất 1 phút rồi chạy request này — kỳ vọng thấy ít nhất 1 bản ghi
+###    TaskExecutionHistory do EchoInProcessJobAction đã chạy.
+GET {{baseUrl}}/api/task-history/search?taskName=echo-every-minute
+
+### 6. Dọn dẹp: pause task để ngừng bắn trigger mỗi phút.
+PUT {{baseUrl}}/api/tasks/pause/d5b1d30c-4437-45b0-8708-250262d877e4
+
+### 6. Dọn dẹp: pause task để ngừng bắn trigger mỗi phút.
+PUT {{baseUrl}}/api/tasks/resume/d5b1d30c-4437-45b0-8708-250262d877e4
+
+### 7. Dọn dẹp: xoá task rồi mới xoá JobDefinition (JobDefinition đang bị Task
+###    tham chiếu sẽ bị từ chối xoá — HTTP 409, xem JobDefinitionInUseException).
+DELETE {{baseUrl}}/api/tasks/d5b1d30c-4437-45b0-8708-250262d877e4
+
+###
+DELETE {{baseUrl}}/api/job-definitions/0104866d-ea73-46f8-96d8-f7cff5fab7cf

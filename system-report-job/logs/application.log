@@ -1,0 +1,303 @@
+2026-08-13T20:40:59.419+07:00  INFO 6812 --- [system-report-job] [SpringApplicationShutdownHook] org.quartz.core.QuartzScheduler          : Scheduler SystemReportJobScheduler_$_NON_CLUSTERED paused.
+2026-08-13T20:40:59.423+07:00  INFO 6812 --- [system-report-job] [SpringApplicationShutdownHook] o.s.boot.tomcat.GracefulShutdown         : Commencing graceful shutdown. Waiting for active requests to complete
+2026-08-13T20:40:59.430+07:00  INFO 6812 --- [system-report-job] [tomcat-shutdown] o.s.boot.tomcat.GracefulShutdown         : Graceful shutdown complete
+2026-08-13T20:40:59.436+07:00  INFO 6812 --- [system-report-job] [SpringApplicationShutdownHook] o.s.s.quartz.SchedulerFactoryBean        : Shutting down Quartz Scheduler
+2026-08-13T20:40:59.436+07:00  INFO 6812 --- [system-report-job] [SpringApplicationShutdownHook] org.quartz.core.QuartzScheduler          : Scheduler SystemReportJobScheduler_$_NON_CLUSTERED shutting down.
+2026-08-13T20:40:59.436+07:00  INFO 6812 --- [system-report-job] [SpringApplicationShutdownHook] org.quartz.core.QuartzScheduler          : Scheduler SystemReportJobScheduler_$_NON_CLUSTERED paused.
+2026-08-13T20:40:59.935+07:00  INFO 6812 --- [system-report-job] [SpringApplicationShutdownHook] org.quartz.core.QuartzScheduler          : Scheduler SystemReportJobScheduler_$_NON_CLUSTERED shutdown complete.
+2026-08-13T20:40:59.937+07:00  INFO 6812 --- [system-report-job] [SpringApplicationShutdownHook] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-08-13T20:40:59.940+07:00  INFO 6812 --- [system-report-job] [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : SystemReportJobHikariCP - Shutdown initiated...
+2026-08-13T20:40:59.944+07:00  INFO 6812 --- [system-report-job] [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : SystemReportJobHikariCP - Shutdown completed.
+2026-08-13T20:41:01.549+07:00  INFO 7200 --- [system-report-job] [main] c.c.systemreportjob.JobApplication       : Starting JobApplication using Java 21.0.5 with PID 7200 (/Users/tigerpro/Documents/SA/core-banking-10000tps/system-report-job/target/classes started by tigerpro in /Users/tigerpro/Documents/SA/core-banking-10000tps/system-report-job)
+2026-08-13T20:41:01.557+07:00  INFO 7200 --- [system-report-job] [main] c.c.systemreportjob.JobApplication       : No active profile set, falling back to 1 default profile: "default"
+2026-08-13T20:41:02.041+07:00  INFO 7200 --- [system-report-job] [main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-08-13T20:41:02.082+07:00  INFO 7200 --- [system-report-job] [main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 30 ms. Found 3 JPA repository interfaces.
+2026-08-13T20:41:02.394+07:00  INFO 7200 --- [system-report-job] [main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 8888 (http)
+2026-08-13T20:41:02.401+07:00  INFO 7200 --- [system-report-job] [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-08-13T20:41:02.402+07:00  INFO 7200 --- [system-report-job] [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.22]
+2026-08-13T20:41:02.425+07:00  INFO 7200 --- [system-report-job] [main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 849 ms
+2026-08-13T20:41:02.598+07:00  INFO 7200 --- [system-report-job] [main] com.zaxxer.hikari.HikariDataSource       : SystemReportJobHikariCP - Starting...
+2026-08-13T20:41:02.696+07:00  INFO 7200 --- [system-report-job] [main] com.zaxxer.hikari.pool.HikariPool        : SystemReportJobHikariCP - Added connection org.postgresql.jdbc.PgConnection@2f60e66a
+2026-08-13T20:41:02.697+07:00  INFO 7200 --- [system-report-job] [main] com.zaxxer.hikari.HikariDataSource       : SystemReportJobHikariCP - Start completed.
+2026-08-13T20:41:02.711+07:00  INFO 7200 --- [system-report-job] [main] org.flywaydb.core.FlywayExecutor         : Database: jdbc:postgresql://localhost:5432/db_system_report_job (PostgreSQL 17.10)
+2026-08-13T20:41:02.763+07:00  INFO 7200 --- [system-report-job] [main] o.f.core.internal.command.DbValidate     : Successfully validated 4 migrations (execution time 00:00.016s)
+2026-08-13T20:41:02.790+07:00  INFO 7200 --- [system-report-job] [main] o.f.core.internal.command.DbMigrate      : Current version of schema "public": 4
+2026-08-13T20:41:02.792+07:00  INFO 7200 --- [system-report-job] [main] o.f.core.internal.command.DbMigrate      : Schema "public" is up to date. No migration necessary.
+2026-08-13T20:41:02.847+07:00  INFO 7200 --- [system-report-job] [main] org.hibernate.orm.jpa                    : HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-08-13T20:41:02.879+07:00  INFO 7200 --- [system-report-job] [main] org.hibernate.orm.core                   : HHH000001: Hibernate ORM core version 7.4.1.Final
+2026-08-13T20:41:03.099+07:00  INFO 7200 --- [system-report-job] [main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-08-13T20:41:03.159+07:00  INFO 7200 --- [system-report-job] [main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [jdbc:postgresql://localhost:5432/db_system_report_job]
+	Database driver: PostgreSQL JDBC Driver
+	Database dialect: PostgreSQLDialect
+	Database version: 17.10
+	Default catalog/schema: db_system_report_job/public
+	Autocommit mode: undefined/unknown
+	Isolation level: READ_COMMITTED [default READ_COMMITTED]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-08-13T20:41:03.662+07:00  INFO 7200 --- [system-report-job] [main] org.hibernate.orm.core                   : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-08-13T20:41:03.695+07:00  INFO 7200 --- [system-report-job] [main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-08-13T20:41:03.873+07:00  INFO 7200 --- [system-report-job] [main] o.s.d.j.r.query.QueryEnhancerFactories   : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-08-13T20:41:04.017+07:00  INFO 7200 --- [system-report-job] [main] hedulerFactoryBean$LocalSchedulerFactory : Using default implementation for ThreadExecutor
+2026-08-13T20:41:04.023+07:00  INFO 7200 --- [system-report-job] [main] org.quartz.core.SchedulerSignalerImpl    : Initialized Scheduler Signaller of type: class org.quartz.core.SchedulerSignalerImpl
+2026-08-13T20:41:04.023+07:00  INFO 7200 --- [system-report-job] [main] org.quartz.core.QuartzScheduler          : Quartz Scheduler v2.5.2 created.
+2026-08-13T20:41:04.025+07:00  INFO 7200 --- [system-report-job] [main] o.s.s.quartz.LocalDataSourceJobStore     : Using db table-based data access locking (synchronization).
+2026-08-13T20:41:04.026+07:00  INFO 7200 --- [system-report-job] [main] o.s.s.quartz.LocalDataSourceJobStore     : JobStoreCMT initialized.
+2026-08-13T20:41:04.026+07:00  INFO 7200 --- [system-report-job] [main] org.quartz.core.QuartzScheduler          : Scheduler meta-data: Quartz Scheduler (v2.5.2) 'SystemReportJobScheduler' with instanceId 'NON_CLUSTERED'
+  Scheduler class: 'org.quartz.core.QuartzScheduler' - running locally.
+  NOT STARTED.
+  Currently in standby mode.
+  Number of jobs executed: 0
+  Using thread pool 'org.quartz.simpl.SimpleThreadPool' - with 10 threads.
+  Using job-store 'org.springframework.scheduling.quartz.LocalDataSourceJobStore' - which supports persistence. and is not clustered.
+
+2026-08-13T20:41:04.026+07:00  INFO 7200 --- [system-report-job] [main] hedulerFactoryBean$LocalSchedulerFactory : Quartz scheduler 'SystemReportJobScheduler' initialized from an externally provided properties instance.
+2026-08-13T20:41:04.026+07:00  INFO 7200 --- [system-report-job] [main] hedulerFactoryBean$LocalSchedulerFactory : Quartz scheduler version: 2.5.2
+2026-08-13T20:41:04.026+07:00  INFO 7200 --- [system-report-job] [main] org.quartz.core.QuartzScheduler          : JobFactory set to: com.corebanking.systemreportjob.infrastructure.config.QuartzClusterConfig$AutowiringSpringBeanJobFactory@6a17ab87
+2026-08-13T20:41:04.357+07:00  INFO 7200 --- [system-report-job] [main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 2 endpoints beneath base path '/actuator'
+2026-08-13T20:41:04.411+07:00  INFO 7200 --- [system-report-job] [main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 8888 (http) with context path '/system-report-job'
+2026-08-13T20:41:04.412+07:00  INFO 7200 --- [system-report-job] [main] o.s.s.quartz.SchedulerFactoryBean        : Starting Quartz Scheduler now
+2026-08-13T20:41:04.420+07:00  INFO 7200 --- [system-report-job] [main] o.s.s.quartz.LocalDataSourceJobStore     : Freed 0 triggers from 'acquired' / 'blocked' state.
+2026-08-13T20:41:04.423+07:00  INFO 7200 --- [system-report-job] [main] o.s.s.quartz.LocalDataSourceJobStore     : Recovering 0 jobs that were in-progress at the time of the last shut-down.
+2026-08-13T20:41:04.423+07:00  INFO 7200 --- [system-report-job] [main] o.s.s.quartz.LocalDataSourceJobStore     : Recovery complete.
+2026-08-13T20:41:04.424+07:00  INFO 7200 --- [system-report-job] [main] o.s.s.quartz.LocalDataSourceJobStore     : Removed 0 'complete' triggers.
+2026-08-13T20:41:04.424+07:00  INFO 7200 --- [system-report-job] [main] o.s.s.quartz.LocalDataSourceJobStore     : Removed 0 stale fired job entries.
+2026-08-13T20:41:04.429+07:00  INFO 7200 --- [system-report-job] [main] org.quartz.core.QuartzScheduler          : Scheduler SystemReportJobScheduler_$_NON_CLUSTERED started.
+2026-08-13T20:41:04.435+07:00  INFO 7200 --- [system-report-job] [main] c.c.systemreportjob.JobApplication       : Started JobApplication in 3.246 seconds (process running for 3.668)
+2026-08-13T20:41:04.899+07:00  INFO 7200 --- [system-report-job] [RMI TCP Connection(3)-127.0.0.1] o.a.c.c.C.[.[.[/system-report-job]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-08-13T20:41:04.899+07:00  INFO 7200 --- [system-report-job] [RMI TCP Connection(3)-127.0.0.1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-08-13T20:41:04.901+07:00  INFO 7200 --- [system-report-job] [RMI TCP Connection(3)-127.0.0.1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2026-08-13T20:51:00.043+07:00  INFO 7200 --- [system-report-job] [SystemReportJobScheduler_Worker-1] c.c.s.i.j.sample.EchoInProcessJobAction  : [ECHO] JobDefinition 0104866d-ea73-46f8-96d8-f7cff5fab7cf expression={"msg":"hello from echo job"}
+2026-08-13T20:52:00.073+07:00  INFO 7200 --- [system-report-job] [SystemReportJobScheduler_Worker-2] c.c.s.i.j.sample.EchoInProcessJobAction  : [ECHO] JobDefinition 0104866d-ea73-46f8-96d8-f7cff5fab7cf expression={"msg":"hello from echo job"}
+2026-08-13T20:53:00.050+07:00  INFO 7200 --- [system-report-job] [SystemReportJobScheduler_Worker-3] c.c.s.i.j.sample.EchoInProcessJobAction  : [ECHO] JobDefinition 0104866d-ea73-46f8-96d8-f7cff5fab7cf expression={"msg":"hello from echo job"}
+2026-08-13T20:54:00.051+07:00  INFO 7200 --- [system-report-job] [SystemReportJobScheduler_Worker-4] c.c.s.i.j.sample.EchoInProcessJobAction  : [ECHO] JobDefinition 0104866d-ea73-46f8-96d8-f7cff5fab7cf expression={"msg":"hello from echo job"}
+2026-08-13T20:55:00.034+07:00  INFO 7200 --- [system-report-job] [SystemReportJobScheduler_Worker-5] c.c.s.i.j.sample.EchoInProcessJobAction  : [ECHO] JobDefinition 0104866d-ea73-46f8-96d8-f7cff5fab7cf expression={"msg":"hello from echo job"}
+2026-08-13T20:56:00.040+07:00  INFO 7200 --- [system-report-job] [SystemReportJobScheduler_Worker-6] c.c.s.i.j.sample.EchoInProcessJobAction  : [ECHO] JobDefinition 0104866d-ea73-46f8-96d8-f7cff5fab7cf expression={"msg":"hello from echo job"}
+2026-08-13T20:58:19.793+07:00  INFO 12818 --- [system-report-job-test] [main] c.c.s.i.web.OpenApiDocumentationTest     : Starting OpenApiDocumentationTest using Java 21.0.5 with PID 12818 (started by tigerpro in /Users/tigerpro/Documents/SA/core-banking-10000tps/system-report-job)
+2026-08-13T20:58:19.801+07:00  INFO 12818 --- [system-report-job-test] [main] c.c.s.i.web.OpenApiDocumentationTest     : The following 1 profile is active: "test"
+2026-08-13T20:58:20.260+07:00  INFO 12818 --- [system-report-job-test] [main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-08-13T20:58:20.293+07:00  INFO 12818 --- [system-report-job-test] [main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 27 ms. Found 3 JPA repository interfaces.
+2026-08-13T20:58:20.615+07:00  INFO 12818 --- [system-report-job-test] [main] com.zaxxer.hikari.HikariDataSource       : SystemReportJobHikariCP - Starting...
+2026-08-13T20:58:20.720+07:00  INFO 12818 --- [system-report-job-test] [main] com.zaxxer.hikari.pool.HikariPool        : SystemReportJobHikariCP - Added connection org.postgresql.jdbc.PgConnection@4844e24b
+2026-08-13T20:58:20.721+07:00  INFO 12818 --- [system-report-job-test] [main] com.zaxxer.hikari.HikariDataSource       : SystemReportJobHikariCP - Start completed.
+2026-08-13T20:58:20.733+07:00  INFO 12818 --- [system-report-job-test] [main] org.flywaydb.core.FlywayExecutor         : Database: jdbc:postgresql://localhost:33483/test?loggerLevel=OFF (PostgreSQL 16.13)
+2026-08-13T20:58:20.773+07:00  INFO 12818 --- [system-report-job-test] [main] o.f.c.i.s.JdbcTableSchemaHistory         : Schema history table "public"."flyway_schema_history" does not exist yet
+2026-08-13T20:58:20.775+07:00  INFO 12818 --- [system-report-job-test] [main] o.f.core.internal.command.DbValidate     : Successfully validated 4 migrations (execution time 00:00.014s)
+2026-08-13T20:58:20.784+07:00  INFO 12818 --- [system-report-job-test] [main] o.f.c.i.s.JdbcTableSchemaHistory         : Creating Schema History table "public"."flyway_schema_history" ...
+2026-08-13T20:58:20.858+07:00  INFO 12818 --- [system-report-job-test] [main] o.f.core.internal.command.DbMigrate      : Current version of schema "public": << Empty Schema >>
+2026-08-13T20:58:20.869+07:00  INFO 12818 --- [system-report-job-test] [main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "1 - create quartz tables"
+2026-08-13T20:58:20.922+07:00  INFO 12818 --- [system-report-job-test] [main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "2 - create job definitions"
+2026-08-13T20:58:20.932+07:00  INFO 12818 --- [system-report-job-test] [main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "3 - create tasks"
+2026-08-13T20:58:20.943+07:00  INFO 12818 --- [system-report-job-test] [main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "4 - create task execution history"
+2026-08-13T20:58:20.954+07:00  INFO 12818 --- [system-report-job-test] [main] o.f.core.internal.command.DbMigrate      : Successfully applied 4 migrations to schema "public", now at version v4 (execution time 00:00.056s)
+2026-08-13T20:58:21.014+07:00  INFO 12818 --- [system-report-job-test] [main] org.hibernate.orm.jpa                    : HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-08-13T20:58:21.043+07:00  INFO 12818 --- [system-report-job-test] [main] org.hibernate.orm.core                   : HHH000001: Hibernate ORM core version 7.4.1.Final
+2026-08-13T20:58:21.304+07:00  INFO 12818 --- [system-report-job-test] [main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-08-13T20:58:21.361+07:00  INFO 12818 --- [system-report-job-test] [main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [jdbc:postgresql://localhost:33483/test?loggerLevel=OFF]
+	Database driver: PostgreSQL JDBC Driver
+	Database dialect: PostgreSQLDialect
+	Database version: 16.13
+	Default catalog/schema: test/public
+	Autocommit mode: undefined/unknown
+	Isolation level: READ_COMMITTED [default READ_COMMITTED]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-08-13T20:58:21.894+07:00  INFO 12818 --- [system-report-job-test] [main] org.hibernate.orm.core                   : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-08-13T20:58:21.934+07:00  INFO 12818 --- [system-report-job-test] [main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-08-13T20:58:22.173+07:00  INFO 12818 --- [system-report-job-test] [main] o.s.d.j.r.query.QueryEnhancerFactories   : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-08-13T20:58:22.309+07:00  INFO 12818 --- [system-report-job-test] [main] hedulerFactoryBean$LocalSchedulerFactory : Using default implementation for ThreadExecutor
+2026-08-13T20:58:22.315+07:00  INFO 12818 --- [system-report-job-test] [main] org.quartz.core.SchedulerSignalerImpl    : Initialized Scheduler Signaller of type: class org.quartz.core.SchedulerSignalerImpl
+2026-08-13T20:58:22.315+07:00  INFO 12818 --- [system-report-job-test] [main] org.quartz.core.QuartzScheduler          : Quartz Scheduler v2.5.2 created.
+2026-08-13T20:58:22.318+07:00  INFO 12818 --- [system-report-job-test] [main] o.s.s.quartz.LocalDataSourceJobStore     : Using db table-based data access locking (synchronization).
+2026-08-13T20:58:22.319+07:00  INFO 12818 --- [system-report-job-test] [main] o.s.s.quartz.LocalDataSourceJobStore     : JobStoreCMT initialized.
+2026-08-13T20:58:22.320+07:00  INFO 12818 --- [system-report-job-test] [main] org.quartz.core.QuartzScheduler          : Scheduler meta-data: Quartz Scheduler (v2.5.2) 'SystemReportJobScheduler' with instanceId 'NON_CLUSTERED'
+  Scheduler class: 'org.quartz.core.QuartzScheduler' - running locally.
+  NOT STARTED.
+  Currently in standby mode.
+  Number of jobs executed: 0
+  Using thread pool 'org.quartz.simpl.SimpleThreadPool' - with 10 threads.
+  Using job-store 'org.springframework.scheduling.quartz.LocalDataSourceJobStore' - which supports persistence. and is not clustered.
+
+2026-08-13T20:58:22.320+07:00  INFO 12818 --- [system-report-job-test] [main] hedulerFactoryBean$LocalSchedulerFactory : Quartz scheduler 'SystemReportJobScheduler' initialized from an externally provided properties instance.
+2026-08-13T20:58:22.320+07:00  INFO 12818 --- [system-report-job-test] [main] hedulerFactoryBean$LocalSchedulerFactory : Quartz scheduler version: 2.5.2
+2026-08-13T20:58:22.320+07:00  INFO 12818 --- [system-report-job-test] [main] org.quartz.core.QuartzScheduler          : JobFactory set to: com.corebanking.systemreportjob.infrastructure.config.QuartzClusterConfig$AutowiringSpringBeanJobFactory@371dc46e
+2026-08-13T20:58:22.677+07:00  INFO 12818 --- [system-report-job-test] [main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-08-13T20:58:22.677+07:00  INFO 12818 --- [system-report-job-test] [main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-08-13T20:58:22.680+07:00  INFO 12818 --- [system-report-job-test] [main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 1 endpoint beneath base path '/actuator'
+2026-08-13T20:58:22.685+07:00  INFO 12818 --- [system-report-job-test] [main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 8 ms
+2026-08-13T20:58:22.718+07:00  INFO 12818 --- [system-report-job-test] [main] o.s.s.quartz.SchedulerFactoryBean        : Starting Quartz Scheduler now
+2026-08-13T20:58:22.732+07:00  INFO 12818 --- [system-report-job-test] [main] o.s.s.quartz.LocalDataSourceJobStore     : Freed 0 triggers from 'acquired' / 'blocked' state.
+2026-08-13T20:58:22.734+07:00  INFO 12818 --- [system-report-job-test] [main] o.s.s.quartz.LocalDataSourceJobStore     : Recovering 0 jobs that were in-progress at the time of the last shut-down.
+2026-08-13T20:58:22.735+07:00  INFO 12818 --- [system-report-job-test] [main] o.s.s.quartz.LocalDataSourceJobStore     : Recovery complete.
+2026-08-13T20:58:22.735+07:00  INFO 12818 --- [system-report-job-test] [main] o.s.s.quartz.LocalDataSourceJobStore     : Removed 0 'complete' triggers.
+2026-08-13T20:58:22.736+07:00  INFO 12818 --- [system-report-job-test] [main] o.s.s.quartz.LocalDataSourceJobStore     : Removed 0 stale fired job entries.
+2026-08-13T20:58:22.737+07:00  INFO 12818 --- [system-report-job-test] [main] org.quartz.core.QuartzScheduler          : Scheduler SystemReportJobScheduler_$_NON_CLUSTERED started.
+2026-08-13T20:58:22.743+07:00  INFO 12818 --- [system-report-job-test] [main] c.c.s.i.web.OpenApiDocumentationTest     : Started OpenApiDocumentationTest in 3.268 seconds (process running for 6.757)
+2026-08-13T20:58:23.292+07:00  INFO 12818 --- [system-report-job-test] [main] o.springdoc.api.AbstractOpenApiResource  : Init duration for springdoc-openapi is: 196 ms
+2026-08-13T20:58:23.355+07:00  WARN 12818 --- [system-report-job-test] [main] o.j.j.e.d.AbstractExtensionContext       : Type implements CloseableResource but not AutoCloseable: org.testcontainers.junit.jupiter.TestcontainersExtension$StoreAdapter
+2026-08-13T20:58:23.602+07:00  INFO 12818 --- [system-report-job-test] [SpringApplicationShutdownHook] org.quartz.core.QuartzScheduler          : Scheduler SystemReportJobScheduler_$_NON_CLUSTERED paused.
+2026-08-13T20:58:23.605+07:00  INFO 12818 --- [system-report-job-test] [SpringApplicationShutdownHook] o.s.s.quartz.SchedulerFactoryBean        : Shutting down Quartz Scheduler
+2026-08-13T20:58:23.605+07:00  INFO 12818 --- [system-report-job-test] [SpringApplicationShutdownHook] org.quartz.core.QuartzScheduler          : Scheduler SystemReportJobScheduler_$_NON_CLUSTERED shutting down.
+2026-08-13T20:58:23.605+07:00  INFO 12818 --- [system-report-job-test] [SpringApplicationShutdownHook] org.quartz.core.QuartzScheduler          : Scheduler SystemReportJobScheduler_$_NON_CLUSTERED paused.
+2026-08-13T20:58:23.824+07:00  INFO 12818 --- [system-report-job-test] [SpringApplicationShutdownHook] org.quartz.core.QuartzScheduler          : Scheduler SystemReportJobScheduler_$_NON_CLUSTERED shutdown complete.
+2026-08-13T20:58:23.825+07:00  INFO 12818 --- [system-report-job-test] [SpringApplicationShutdownHook] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-08-13T20:58:23.827+07:00  INFO 12818 --- [system-report-job-test] [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : SystemReportJobHikariCP - Shutdown initiated...
+2026-08-13T20:58:23.829+07:00  INFO 12818 --- [system-report-job-test] [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : SystemReportJobHikariCP - Shutdown completed.
+2026-08-13T20:58:44.099+07:00  INFO 12996 --- [system-report-job-test] [main] c.c.s.i.web.OpenApiDocumentationTest     : Starting OpenApiDocumentationTest using Java 21.0.5 with PID 12996 (started by tigerpro in /Users/tigerpro/Documents/SA/core-banking-10000tps/system-report-job)
+2026-08-13T20:58:44.106+07:00  INFO 12996 --- [system-report-job-test] [main] c.c.s.i.web.OpenApiDocumentationTest     : The following 1 profile is active: "test"
+2026-08-13T20:58:44.568+07:00  INFO 12996 --- [system-report-job-test] [main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-08-13T20:58:44.601+07:00  INFO 12996 --- [system-report-job-test] [main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 27 ms. Found 3 JPA repository interfaces.
+2026-08-13T20:58:44.913+07:00  INFO 12996 --- [system-report-job-test] [main] com.zaxxer.hikari.HikariDataSource       : SystemReportJobHikariCP - Starting...
+2026-08-13T20:58:45.020+07:00  INFO 12996 --- [system-report-job-test] [main] com.zaxxer.hikari.pool.HikariPool        : SystemReportJobHikariCP - Added connection org.postgresql.jdbc.PgConnection@4844e24b
+2026-08-13T20:58:45.021+07:00  INFO 12996 --- [system-report-job-test] [main] com.zaxxer.hikari.HikariDataSource       : SystemReportJobHikariCP - Start completed.
+2026-08-13T20:58:45.034+07:00  INFO 12996 --- [system-report-job-test] [main] org.flywaydb.core.FlywayExecutor         : Database: jdbc:postgresql://localhost:33485/test?loggerLevel=OFF (PostgreSQL 16.13)
+2026-08-13T20:58:45.074+07:00  INFO 12996 --- [system-report-job-test] [main] o.f.c.i.s.JdbcTableSchemaHistory         : Schema history table "public"."flyway_schema_history" does not exist yet
+2026-08-13T20:58:45.079+07:00  INFO 12996 --- [system-report-job-test] [main] o.f.core.internal.command.DbValidate     : Successfully validated 4 migrations (execution time 00:00.020s)
+2026-08-13T20:58:45.091+07:00  INFO 12996 --- [system-report-job-test] [main] o.f.c.i.s.JdbcTableSchemaHistory         : Creating Schema History table "public"."flyway_schema_history" ...
+2026-08-13T20:58:45.139+07:00  INFO 12996 --- [system-report-job-test] [main] o.f.core.internal.command.DbMigrate      : Current version of schema "public": << Empty Schema >>
+2026-08-13T20:58:45.150+07:00  INFO 12996 --- [system-report-job-test] [main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "1 - create quartz tables"
+2026-08-13T20:58:45.202+07:00  INFO 12996 --- [system-report-job-test] [main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "2 - create job definitions"
+2026-08-13T20:58:45.211+07:00  INFO 12996 --- [system-report-job-test] [main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "3 - create tasks"
+2026-08-13T20:58:45.221+07:00  INFO 12996 --- [system-report-job-test] [main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "4 - create task execution history"
+2026-08-13T20:58:45.230+07:00  INFO 12996 --- [system-report-job-test] [main] o.f.core.internal.command.DbMigrate      : Successfully applied 4 migrations to schema "public", now at version v4 (execution time 00:00.053s)
+2026-08-13T20:58:45.285+07:00  INFO 12996 --- [system-report-job-test] [main] org.hibernate.orm.jpa                    : HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-08-13T20:58:45.315+07:00  INFO 12996 --- [system-report-job-test] [main] org.hibernate.orm.core                   : HHH000001: Hibernate ORM core version 7.4.1.Final
+2026-08-13T20:58:45.512+07:00  INFO 12996 --- [system-report-job-test] [main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-08-13T20:58:45.567+07:00  INFO 12996 --- [system-report-job-test] [main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [jdbc:postgresql://localhost:33485/test?loggerLevel=OFF]
+	Database driver: PostgreSQL JDBC Driver
+	Database dialect: PostgreSQLDialect
+	Database version: 16.13
+	Default catalog/schema: test/public
+	Autocommit mode: undefined/unknown
+	Isolation level: READ_COMMITTED [default READ_COMMITTED]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-08-13T20:58:46.052+07:00  INFO 12996 --- [system-report-job-test] [main] org.hibernate.orm.core                   : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-08-13T20:58:46.079+07:00  INFO 12996 --- [system-report-job-test] [main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-08-13T20:58:46.312+07:00  INFO 12996 --- [system-report-job-test] [main] o.s.d.j.r.query.QueryEnhancerFactories   : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-08-13T20:58:46.458+07:00  INFO 12996 --- [system-report-job-test] [main] hedulerFactoryBean$LocalSchedulerFactory : Using default implementation for ThreadExecutor
+2026-08-13T20:58:46.466+07:00  INFO 12996 --- [system-report-job-test] [main] org.quartz.core.SchedulerSignalerImpl    : Initialized Scheduler Signaller of type: class org.quartz.core.SchedulerSignalerImpl
+2026-08-13T20:58:46.467+07:00  INFO 12996 --- [system-report-job-test] [main] org.quartz.core.QuartzScheduler          : Quartz Scheduler v2.5.2 created.
+2026-08-13T20:58:46.470+07:00  INFO 12996 --- [system-report-job-test] [main] o.s.s.quartz.LocalDataSourceJobStore     : Using db table-based data access locking (synchronization).
+2026-08-13T20:58:46.472+07:00  INFO 12996 --- [system-report-job-test] [main] o.s.s.quartz.LocalDataSourceJobStore     : JobStoreCMT initialized.
+2026-08-13T20:58:46.473+07:00  INFO 12996 --- [system-report-job-test] [main] org.quartz.core.QuartzScheduler          : Scheduler meta-data: Quartz Scheduler (v2.5.2) 'SystemReportJobScheduler' with instanceId 'NON_CLUSTERED'
+  Scheduler class: 'org.quartz.core.QuartzScheduler' - running locally.
+  NOT STARTED.
+  Currently in standby mode.
+  Number of jobs executed: 0
+  Using thread pool 'org.quartz.simpl.SimpleThreadPool' - with 10 threads.
+  Using job-store 'org.springframework.scheduling.quartz.LocalDataSourceJobStore' - which supports persistence. and is not clustered.
+
+2026-08-13T20:58:46.474+07:00  INFO 12996 --- [system-report-job-test] [main] hedulerFactoryBean$LocalSchedulerFactory : Quartz scheduler 'SystemReportJobScheduler' initialized from an externally provided properties instance.
+2026-08-13T20:58:46.474+07:00  INFO 12996 --- [system-report-job-test] [main] hedulerFactoryBean$LocalSchedulerFactory : Quartz scheduler version: 2.5.2
+2026-08-13T20:58:46.475+07:00  INFO 12996 --- [system-report-job-test] [main] org.quartz.core.QuartzScheduler          : JobFactory set to: com.corebanking.systemreportjob.infrastructure.config.QuartzClusterConfig$AutowiringSpringBeanJobFactory@371dc46e
+2026-08-13T20:58:46.943+07:00  INFO 12996 --- [system-report-job-test] [main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-08-13T20:58:46.945+07:00  INFO 12996 --- [system-report-job-test] [main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-08-13T20:58:46.951+07:00  INFO 12996 --- [system-report-job-test] [main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 1 endpoint beneath base path '/actuator'
+2026-08-13T20:58:46.971+07:00  INFO 12996 --- [system-report-job-test] [main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 24 ms
+2026-08-13T20:58:47.036+07:00  INFO 12996 --- [system-report-job-test] [main] o.s.s.quartz.SchedulerFactoryBean        : Starting Quartz Scheduler now
+2026-08-13T20:58:47.067+07:00  INFO 12996 --- [system-report-job-test] [main] o.s.s.quartz.LocalDataSourceJobStore     : Freed 0 triggers from 'acquired' / 'blocked' state.
+2026-08-13T20:58:47.075+07:00  INFO 12996 --- [system-report-job-test] [main] o.s.s.quartz.LocalDataSourceJobStore     : Recovering 0 jobs that were in-progress at the time of the last shut-down.
+2026-08-13T20:58:47.076+07:00  INFO 12996 --- [system-report-job-test] [main] o.s.s.quartz.LocalDataSourceJobStore     : Recovery complete.
+2026-08-13T20:58:47.078+07:00  INFO 12996 --- [system-report-job-test] [main] o.s.s.quartz.LocalDataSourceJobStore     : Removed 0 'complete' triggers.
+2026-08-13T20:58:47.079+07:00  INFO 12996 --- [system-report-job-test] [main] o.s.s.quartz.LocalDataSourceJobStore     : Removed 0 stale fired job entries.
+2026-08-13T20:58:47.081+07:00  INFO 12996 --- [system-report-job-test] [main] org.quartz.core.QuartzScheduler          : Scheduler SystemReportJobScheduler_$_NON_CLUSTERED started.
+2026-08-13T20:58:47.088+07:00  INFO 12996 --- [system-report-job-test] [main] c.c.s.i.web.OpenApiDocumentationTest     : Started OpenApiDocumentationTest in 3.306 seconds (process running for 7.065)
+2026-08-13T20:58:47.791+07:00  INFO 12996 --- [system-report-job-test] [main] o.springdoc.api.AbstractOpenApiResource  : Init duration for springdoc-openapi is: 211 ms
+2026-08-13T20:58:47.854+07:00  WARN 12996 --- [system-report-job-test] [main] o.j.j.e.d.AbstractExtensionContext       : Type implements CloseableResource but not AutoCloseable: org.testcontainers.junit.jupiter.TestcontainersExtension$StoreAdapter
+2026-08-13T20:58:48.172+07:00  INFO 12996 --- [system-report-job-test] [SpringApplicationShutdownHook] org.quartz.core.QuartzScheduler          : Scheduler SystemReportJobScheduler_$_NON_CLUSTERED paused.
+2026-08-13T20:58:48.175+07:00  INFO 12996 --- [system-report-job-test] [SpringApplicationShutdownHook] o.s.s.quartz.SchedulerFactoryBean        : Shutting down Quartz Scheduler
+2026-08-13T20:58:48.175+07:00  INFO 12996 --- [system-report-job-test] [SpringApplicationShutdownHook] org.quartz.core.QuartzScheduler          : Scheduler SystemReportJobScheduler_$_NON_CLUSTERED shutting down.
+2026-08-13T20:58:48.175+07:00  INFO 12996 --- [system-report-job-test] [SpringApplicationShutdownHook] org.quartz.core.QuartzScheduler          : Scheduler SystemReportJobScheduler_$_NON_CLUSTERED paused.
+2026-08-13T20:58:48.480+07:00  INFO 12996 --- [system-report-job-test] [SpringApplicationShutdownHook] org.quartz.core.QuartzScheduler          : Scheduler SystemReportJobScheduler_$_NON_CLUSTERED shutdown complete.
+2026-08-13T20:58:48.483+07:00  INFO 12996 --- [system-report-job-test] [SpringApplicationShutdownHook] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-08-13T20:58:48.486+07:00  INFO 12996 --- [system-report-job-test] [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : SystemReportJobHikariCP - Shutdown initiated...
+2026-08-13T20:58:48.487+07:00  INFO 12996 --- [system-report-job-test] [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : SystemReportJobHikariCP - Shutdown completed.
+2026-08-13T20:58:58.937+07:00  INFO 13151 --- [system-report-job-test] [main] c.c.s.i.web.OpenApiDocumentationTest     : Starting OpenApiDocumentationTest using Java 21.0.5 with PID 13151 (started by tigerpro in /Users/tigerpro/Documents/SA/core-banking-10000tps/system-report-job)
+2026-08-13T20:58:58.945+07:00  INFO 13151 --- [system-report-job-test] [main] c.c.s.i.web.OpenApiDocumentationTest     : The following 1 profile is active: "test"
+2026-08-13T20:58:59.453+07:00  INFO 13151 --- [system-report-job-test] [main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-08-13T20:58:59.487+07:00  INFO 13151 --- [system-report-job-test] [main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 28 ms. Found 3 JPA repository interfaces.
+2026-08-13T20:58:59.860+07:00  INFO 13151 --- [system-report-job-test] [main] com.zaxxer.hikari.HikariDataSource       : SystemReportJobHikariCP - Starting...
+2026-08-13T20:58:59.971+07:00  INFO 13151 --- [system-report-job-test] [main] com.zaxxer.hikari.pool.HikariPool        : SystemReportJobHikariCP - Added connection org.postgresql.jdbc.PgConnection@315365ef
+2026-08-13T20:58:59.972+07:00  INFO 13151 --- [system-report-job-test] [main] com.zaxxer.hikari.HikariDataSource       : SystemReportJobHikariCP - Start completed.
+2026-08-13T20:58:59.986+07:00  INFO 13151 --- [system-report-job-test] [main] org.flywaydb.core.FlywayExecutor         : Database: jdbc:postgresql://localhost:33487/test?loggerLevel=OFF (PostgreSQL 16.13)
+2026-08-13T20:59:00.038+07:00  INFO 13151 --- [system-report-job-test] [main] o.f.c.i.s.JdbcTableSchemaHistory         : Schema history table "public"."flyway_schema_history" does not exist yet
+2026-08-13T20:59:00.040+07:00  INFO 13151 --- [system-report-job-test] [main] o.f.core.internal.command.DbValidate     : Successfully validated 4 migrations (execution time 00:00.016s)
+2026-08-13T20:59:00.051+07:00  INFO 13151 --- [system-report-job-test] [main] o.f.c.i.s.JdbcTableSchemaHistory         : Creating Schema History table "public"."flyway_schema_history" ...
+2026-08-13T20:59:00.116+07:00  INFO 13151 --- [system-report-job-test] [main] o.f.core.internal.command.DbMigrate      : Current version of schema "public": << Empty Schema >>
+2026-08-13T20:59:00.128+07:00  INFO 13151 --- [system-report-job-test] [main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "1 - create quartz tables"
+2026-08-13T20:59:00.176+07:00  INFO 13151 --- [system-report-job-test] [main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "2 - create job definitions"
+2026-08-13T20:59:00.187+07:00  INFO 13151 --- [system-report-job-test] [main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "3 - create tasks"
+2026-08-13T20:59:00.199+07:00  INFO 13151 --- [system-report-job-test] [main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "4 - create task execution history"
+2026-08-13T20:59:00.209+07:00  INFO 13151 --- [system-report-job-test] [main] o.f.core.internal.command.DbMigrate      : Successfully applied 4 migrations to schema "public", now at version v4 (execution time 00:00.051s)
+2026-08-13T20:59:00.273+07:00  INFO 13151 --- [system-report-job-test] [main] org.hibernate.orm.jpa                    : HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-08-13T20:59:00.302+07:00  INFO 13151 --- [system-report-job-test] [main] org.hibernate.orm.core                   : HHH000001: Hibernate ORM core version 7.4.1.Final
+2026-08-13T20:59:00.513+07:00  INFO 13151 --- [system-report-job-test] [main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-08-13T20:59:00.571+07:00  INFO 13151 --- [system-report-job-test] [main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [jdbc:postgresql://localhost:33487/test?loggerLevel=OFF]
+	Database driver: PostgreSQL JDBC Driver
+	Database dialect: PostgreSQLDialect
+	Database version: 16.13
+	Default catalog/schema: test/public
+	Autocommit mode: undefined/unknown
+	Isolation level: READ_COMMITTED [default READ_COMMITTED]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-08-13T20:59:01.060+07:00  INFO 13151 --- [system-report-job-test] [main] org.hibernate.orm.core                   : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-08-13T20:59:01.086+07:00  INFO 13151 --- [system-report-job-test] [main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-08-13T20:59:01.337+07:00  INFO 13151 --- [system-report-job-test] [main] o.s.d.j.r.query.QueryEnhancerFactories   : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-08-13T20:59:01.495+07:00  INFO 13151 --- [system-report-job-test] [main] hedulerFactoryBean$LocalSchedulerFactory : Using default implementation for ThreadExecutor
+2026-08-13T20:59:01.502+07:00  INFO 13151 --- [system-report-job-test] [main] org.quartz.core.SchedulerSignalerImpl    : Initialized Scheduler Signaller of type: class org.quartz.core.SchedulerSignalerImpl
+2026-08-13T20:59:01.503+07:00  INFO 13151 --- [system-report-job-test] [main] org.quartz.core.QuartzScheduler          : Quartz Scheduler v2.5.2 created.
+2026-08-13T20:59:01.505+07:00  INFO 13151 --- [system-report-job-test] [main] o.s.s.quartz.LocalDataSourceJobStore     : Using db table-based data access locking (synchronization).
+2026-08-13T20:59:01.507+07:00  INFO 13151 --- [system-report-job-test] [main] o.s.s.quartz.LocalDataSourceJobStore     : JobStoreCMT initialized.
+2026-08-13T20:59:01.507+07:00  INFO 13151 --- [system-report-job-test] [main] org.quartz.core.QuartzScheduler          : Scheduler meta-data: Quartz Scheduler (v2.5.2) 'SystemReportJobScheduler' with instanceId 'NON_CLUSTERED'
+  Scheduler class: 'org.quartz.core.QuartzScheduler' - running locally.
+  NOT STARTED.
+  Currently in standby mode.
+  Number of jobs executed: 0
+  Using thread pool 'org.quartz.simpl.SimpleThreadPool' - with 10 threads.
+  Using job-store 'org.springframework.scheduling.quartz.LocalDataSourceJobStore' - which supports persistence. and is not clustered.
+
+2026-08-13T20:59:01.508+07:00  INFO 13151 --- [system-report-job-test] [main] hedulerFactoryBean$LocalSchedulerFactory : Quartz scheduler 'SystemReportJobScheduler' initialized from an externally provided properties instance.
+2026-08-13T20:59:01.508+07:00  INFO 13151 --- [system-report-job-test] [main] hedulerFactoryBean$LocalSchedulerFactory : Quartz scheduler version: 2.5.2
+2026-08-13T20:59:01.508+07:00  INFO 13151 --- [system-report-job-test] [main] org.quartz.core.QuartzScheduler          : JobFactory set to: com.corebanking.systemreportjob.infrastructure.config.QuartzClusterConfig$AutowiringSpringBeanJobFactory@16914a63
+2026-08-13T20:59:01.920+07:00  INFO 13151 --- [system-report-job-test] [main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-08-13T20:59:01.921+07:00  INFO 13151 --- [system-report-job-test] [main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-08-13T20:59:01.923+07:00  INFO 13151 --- [system-report-job-test] [main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 1 endpoint beneath base path '/actuator'
+2026-08-13T20:59:01.930+07:00  INFO 13151 --- [system-report-job-test] [main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 9 ms
+2026-08-13T20:59:01.968+07:00  INFO 13151 --- [system-report-job-test] [main] o.s.s.quartz.SchedulerFactoryBean        : Starting Quartz Scheduler now
+2026-08-13T20:59:01.976+07:00  INFO 13151 --- [system-report-job-test] [main] o.s.s.quartz.LocalDataSourceJobStore     : Freed 0 triggers from 'acquired' / 'blocked' state.
+2026-08-13T20:59:01.979+07:00  INFO 13151 --- [system-report-job-test] [main] o.s.s.quartz.LocalDataSourceJobStore     : Recovering 0 jobs that were in-progress at the time of the last shut-down.
+2026-08-13T20:59:01.979+07:00  INFO 13151 --- [system-report-job-test] [main] o.s.s.quartz.LocalDataSourceJobStore     : Recovery complete.
+2026-08-13T20:59:01.980+07:00  INFO 13151 --- [system-report-job-test] [main] o.s.s.quartz.LocalDataSourceJobStore     : Removed 0 'complete' triggers.
+2026-08-13T20:59:01.980+07:00  INFO 13151 --- [system-report-job-test] [main] o.s.s.quartz.LocalDataSourceJobStore     : Removed 0 stale fired job entries.
+2026-08-13T20:59:01.982+07:00  INFO 13151 --- [system-report-job-test] [main] org.quartz.core.QuartzScheduler          : Scheduler SystemReportJobScheduler_$_NON_CLUSTERED started.
+2026-08-13T20:59:01.988+07:00  INFO 13151 --- [system-report-job-test] [main] c.c.s.i.web.OpenApiDocumentationTest     : Started OpenApiDocumentationTest in 3.379 seconds (process running for 6.614)
+2026-08-13T20:59:02.595+07:00  INFO 13151 --- [system-report-job-test] [main] o.springdoc.api.AbstractOpenApiResource  : Init duration for springdoc-openapi is: 229 ms
+2026-08-13T20:59:02.661+07:00  WARN 13151 --- [system-report-job-test] [main] o.j.j.e.d.AbstractExtensionContext       : Type implements CloseableResource but not AutoCloseable: org.testcontainers.junit.jupiter.TestcontainersExtension$StoreAdapter
+2026-08-13T20:59:02.995+07:00  INFO 13151 --- [system-report-job-test] [SpringApplicationShutdownHook] org.quartz.core.QuartzScheduler          : Scheduler SystemReportJobScheduler_$_NON_CLUSTERED paused.
+2026-08-13T20:59:02.998+07:00  INFO 13151 --- [system-report-job-test] [SpringApplicationShutdownHook] o.s.s.quartz.SchedulerFactoryBean        : Shutting down Quartz Scheduler
+2026-08-13T20:59:02.998+07:00  INFO 13151 --- [system-report-job-test] [SpringApplicationShutdownHook] org.quartz.core.QuartzScheduler          : Scheduler SystemReportJobScheduler_$_NON_CLUSTERED shutting down.
+2026-08-13T20:59:02.998+07:00  INFO 13151 --- [system-report-job-test] [SpringApplicationShutdownHook] org.quartz.core.QuartzScheduler          : Scheduler SystemReportJobScheduler_$_NON_CLUSTERED paused.
+2026-08-13T20:59:03.012+07:00  INFO 13151 --- [system-report-job-test] [SpringApplicationShutdownHook] org.quartz.core.QuartzScheduler          : Scheduler SystemReportJobScheduler_$_NON_CLUSTERED shutdown complete.
+2026-08-13T20:59:03.014+07:00  INFO 13151 --- [system-report-job-test] [SpringApplicationShutdownHook] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-08-13T20:59:03.016+07:00  INFO 13151 --- [system-report-job-test] [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : SystemReportJobHikariCP - Shutdown initiated...
+2026-08-13T20:59:03.018+07:00  INFO 13151 --- [system-report-job-test] [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : SystemReportJobHikariCP - Shutdown completed.
+2026-08-13T21:36:30.078+07:00  INFO 7200 --- [system-report-job] [SpringApplicationShutdownHook] org.quartz.core.QuartzScheduler          : Scheduler SystemReportJobScheduler_$_NON_CLUSTERED paused.
+2026-08-13T21:36:30.089+07:00  INFO 7200 --- [system-report-job] [SpringApplicationShutdownHook] o.s.boot.tomcat.GracefulShutdown         : Commencing graceful shutdown. Waiting for active requests to complete
+2026-08-13T21:36:30.100+07:00  INFO 7200 --- [system-report-job] [tomcat-shutdown] o.s.boot.tomcat.GracefulShutdown         : Graceful shutdown complete
+2026-08-13T21:36:30.108+07:00  INFO 7200 --- [system-report-job] [SpringApplicationShutdownHook] o.s.s.quartz.SchedulerFactoryBean        : Shutting down Quartz Scheduler
+2026-08-13T21:36:30.108+07:00  INFO 7200 --- [system-report-job] [SpringApplicationShutdownHook] org.quartz.core.QuartzScheduler          : Scheduler SystemReportJobScheduler_$_NON_CLUSTERED shutting down.
+2026-08-13T21:36:30.108+07:00  INFO 7200 --- [system-report-job] [SpringApplicationShutdownHook] org.quartz.core.QuartzScheduler          : Scheduler SystemReportJobScheduler_$_NON_CLUSTERED paused.

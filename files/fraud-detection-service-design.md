@@ -56,13 +56,21 @@ Drools có sẵn cơ chế **Decision Table**: file `.xls`/`.xlsx` với cấu t
                     │  - version, file (MinIO ref), status │
                     │  - uploaded_by, activated_by, ts        │
                     └───────────────┬─────────────┘
-                                    │ publish RuleActivated event
+                                    │ publish {"versionId": N} qua Redis Pub/Sub
                                     ▼
-                    ┌─────────────────────────────┐
-                    │  RuleEngineManager               │
-                    │  (giữ AtomicReference<KieContainer>│
-                    │   active, swap không downtime)     │
-                    └───────────────┬─────────────┘
+              ┌──────────────────────────────────────────┐
+              │  Redis channel: fraud-rules:activated        │
+              │  (broadcast tới MỌI pod đang subscribe)         │
+              └──────┬──────────────┬──────────────┬──────┘
+                     ▼               ▼               ▼
+              ┌───────────┐   ┌───────────┐   ┌───────────┐
+              │  Pod A       │   │  Pod B       │   │  Pod C       │
+              │ RuleEngine  │   │ RuleEngine  │   │ RuleEngine  │
+              │ Manager       │   │ Manager       │   │ Manager       │
+              │ (AtomicRef)  │   │ (AtomicRef)  │   │ (AtomicRef)  │
+              │ + @Scheduled│   │ + @Scheduled│   │ + @Scheduled│
+              │  poll 30s     │   │  poll 30s     │   │  poll 30s     │
+              └───────────┘   └───────────┘   └───────────┘
                                     │
                                     ▼
    ══════════ Fraud Detection Pipeline (Chain of Responsibility) ══════════
@@ -132,11 +140,93 @@ Admin thêm dòng mới = thêm rule mới. Xoá điều kiện (để trống �
 | **Observer (qua Kafka event)** | `FinalDecisionHandler` publish `FraudDecisionMade` — các service khác (notification, case-management cho đội vận hành review, audit) tự lắng nghe, không coupling trực tiếp vào fraud-detection-service. |
 | **Factory** | `RuleEngineManager` là nơi duy nhất biết cách build `KieContainer` từ file Excel — các phần khác chỉ gọi `ruleEngineAdapter.evaluate(context)`, không biết chi tiết Drools bên dưới. |
 
-## 7. Xử lý concurrency khi hot-reload rule (liên hệ mục 01 — Java Core)
+## 7. Xử lý concurrency & đa instance khi hot-reload rule (liên hệ mục 01 — Java Core)
 
-- `RuleEngineManager` giữ `AtomicReference<KieContainer>` — khi rule mới build xong, **swap tức thời** bằng `compareAndSet`, không cần lock trên hot path.
-- Giao dịch đang được xử lý bằng KieContainer cũ **tiếp tục hoàn tất bình thường** với version cũ (tham chiếu cũ vẫn hợp lệ trong bộ nhớ cho đến khi GC), không có transaction nào bị xử lý "nửa rule cũ nửa rule mới".
-- Build KieContainer mới diễn ra **hoàn toàn ở background thread**, không chặn luồng đánh giá fraud của giao dịch đang chạy — build xong mới swap, nếu build lỗi thì swap không xảy ra, hệ thống tiếp tục dùng version đang chạy.
+### 7.1. Trong 1 instance: vì sao `AtomicReference` đảm bảo zero-downtime
+
+```java
+public class RuleEngineManager {
+    private final AtomicReference<KieContainer> active = new AtomicReference<>();
+
+    public FraudResult evaluate(FraudContext ctx) {
+        KieContainer container = active.get();       // (1) snapshot cục bộ, chụp 1 lần duy nhất
+        KieSession session = container.newKieSession();
+        try {
+            session.insert(ctx);
+            session.fireAllRules();
+            return ctx.getResult();
+        } finally {
+            session.dispose();
+        }
+    }
+
+    public void reload(long versionId) {
+        KieContainer newContainer = buildFromVersion(versionId); // (2) build ở background, không chặn request nào
+        KieContainer old = active.getAndSet(newContainer);       // (3) swap atomic, tức thời
+        scheduleDispose(old, Duration.ofSeconds(30));             // (4) dọn container cũ sau grace period
+    }
+}
+```
+
+Cơ chế đảm bảo an toàn:
+- Mỗi request **chụp snapshot local 1 lần** ở bước (1) — dù `active` bị swap giữa lúc request đang chạy, request đó vẫn giữ tham chiếu tới `KieContainer` cũ (Java không GC khi còn ai giữ reference) → **không request nào bị gián đoạn**.
+- Build container mới **tách biệt hoàn toàn khỏi hot path** — chỉ thao tác `getAndSet()` chạm biến chia sẻ, cực rẻ, không lock.
+- `active` luôn trỏ tới container hợp lệ (cũ hoặc mới), không bao giờ ở trạng thái dở dang.
+- **Giới hạn**: đây chỉ đảm bảo an toàn *trong phạm vi 1 JVM/1 pod*. Không tự động lan sang các pod khác — xem 7.2.
+
+### 7.2. Đa instance: Redis Pub/Sub (broadcast) + Polling Reconciliation (lưới an toàn)
+
+Mỗi pod chạy 1 `RuleEngineManager` độc lập với `AtomicReference` riêng trong bộ nhớ của nó — swap ở pod A không tự lan sang pod B. Giải pháp 2 lớp:
+
+**Lớp 1 — Push qua Redis Pub/Sub (nhanh)**
+Khi admin activate version mới, service publish 1 tín hiệu nhẹ (chỉ chứa `versionId`, không nhét nội dung rule) lên channel Redis — mọi pod đang subscribe channel đó nhận được **đồng thời** (Redis Pub/Sub broadcast tới mọi subscriber, không cần "lách" như Kafka consumer group):
+
+```java
+// Khi activate (chỉ chạy 1 lần, ở service xử lý API activate)
+redisTemplate.convertAndSend("fraud-rules:activated",
+    "{\"versionId\": " + versionId + "}");
+
+// Mỗi pod, đăng ký lúc startup
+@EventListener(ApplicationReadyEvent.class)
+void subscribeRuleUpdates() {
+    redisMessageListener.addMessageListener((message, pattern) -> {
+        long versionId = parseVersionId(message);
+        ruleEngineManager.reload(versionId);   // build container mới từ versionId, rồi swap AtomicReference
+    }, new ChannelTopic("fraud-rules:activated"));
+}
+```
+
+**Lớp 2 — Poll định kỳ (lưới an toàn, giữ nguyên bắt buộc)**
+Redis Pub/Sub là **fire-and-forget** — pod nào mất kết nối/đang restart đúng lúc publish sẽ **mất tín hiệu vĩnh viễn**, không có gì để đọc lại. Vì vậy job polling vẫn phải giữ:
+
+```java
+@Scheduled(fixedDelay = 30_000)
+void reconcile() {
+    long dbActiveVersion = ruleVersionRepository.findActiveVersionId();
+    if (dbActiveVersion != ruleEngineManager.currentVersionId()) {
+        ruleEngineManager.reload(dbActiveVersion);  // tự đồng bộ nếu lệch, dù Pub/Sub có bị miss
+    }
+}
+```
+
+**Khởi động pod mới**: luôn pull trực tiếp version đang ACTIVE từ DB trước (không chờ Pub/Sub, không đọc "lịch sử" nào cả vì Pub/Sub không có persistence) — Redis Pub/Sub chỉ dùng để rút ngắn độ trễ giữa lúc admin activate và lúc pod áp dụng, còn nguồn sự thật luôn là `RuleVersionRepository`.
+
+```
+Pod startup:
+  1. Pull ngay: query RuleVersionRepository.findActiveVersionId() → build container ban đầu
+  2. Subscribe Redis channel "fraud-rules:activated" → reload ngay khi có tín hiệu (độ trễ ~vài trăm ms)
+  3. Background @Scheduled poll DB mỗi 30s → lưới an toàn nếu bước 2 bị miss (Redis restart, network drop...)
+```
+
+### 7.3. Vì sao Redis Pub/Sub thay vì Kafka cho đúng use case này
+Kafka làm broadcast bằng cách "lách" (mỗi pod tự đặt `group.id` riêng), phải chủ động bỏ qua tính năng cốt lõi của Kafka (durable log, replay — set `auto.offset.reset=latest`, không commit offset) mới dùng được cho đúng nhu cầu này. Redis Pub/Sub có ngữ nghĩa broadcast gốc, nhẹ hơn về vận hành, và hệ thống đã có Redis sẵn trong stack (rate-limit/Lua). **Kafka vẫn giữ lại** cho luồng cần durable event log thật sự — `TransactionCompleted`/Outbox Pattern.
+
+### 7.4. Về "eventual consistency toàn fleet"
+Độ trễ giữa các pod dùng rule mới thường ~vài trăm ms (Redis publish + build KieContainer), trường hợp Pub/Sub bị miss thì tối đa 1 chu kỳ poll (~30s). Chấp nhận được vì:
+- Mỗi giao dịch ghi kèm `rule_version_id` thực tế đã dùng ngay tại thời điểm evaluate — audit vẫn chính xác tuyệt đối dù 2 giao dịch cạnh nhau ở 2 pod có thể dùng 2 version khác nhau trong vài giây chuyển tiếp.
+- Nếu có nhu cầu hiếm gặp cần đồng bộ tuyệt đối tức thời trên mọi pod (VD: block khẩn cấp 1 quốc gia đang bị tấn công), nên xử lý ở tầng API Gateway/WAF với cấu hình tập trung, không đặt yêu cầu này lên rule engine.
+
+**Phương án nâng cấp nếu sau này thấy Pub/Sub thuần quá mong manh**: Redis Streams (`XADD`/`XREAD`) — có persistence nhẹ, pod đọc từ vị trí cuối đã xử lý dù mất kết nối tạm thời, vẫn nhẹ hơn Kafka.
 
 ## 8. Bảng dữ liệu chính (PostgreSQL)
 
@@ -183,8 +273,11 @@ CREATE TABLE fraud_rule_audit_log (
 - **Build KieContainer đồng bộ trên request thread** sẽ làm nghẽn — luôn build ở background, swap khi xong.
 - **Không giữ lại version cũ** khiến rollback không thể thực hiện nhanh khi rule mới gây sự cố ở production.
 - **File Excel không có validate ngữ nghĩa** (chỉ check định dạng, không check rule có logic vô lý như risk score âm) — nên thêm business validation layer riêng ngoài compile-check của Drools.
+- **Chỉ dựa vào Redis Pub/Sub mà bỏ qua polling reconciliation**: Pub/Sub là fire-and-forget, pod mất kết nối đúng lúc publish sẽ lệch version vĩnh viễn cho tới lần deploy sau nếu không có job poll định kỳ đối chiếu lại với DB.
+- **Nhét nội dung rule trực tiếp vào message Redis** thay vì chỉ gửi `versionId`: làm message lớn không cần thiết, và tạo 2 nguồn sự thật (message vs DB) dễ lệch nhau — luôn để DB/MinIO là nguồn sự thật duy nhất, Pub/Sub chỉ là tín hiệu "có gì đó đổi".
 
 ## 11. Bài tập thực hành mở rộng
 1. Implement `RuleEngineAdapter` interface + `DroolsRuleEngineAdapter`, viết test chứng minh hot-swap không làm mất/lỗi request đang xử lý đồng thời (dùng nhiều thread giả lập giao dịch trong lúc reload rule).
 2. Implement `BacktestRunner` so sánh kết quả rule cũ vs rule mới trên tập giao dịch mẫu, xuất báo cáo dạng JSON (số lượng thay đổi, % tăng/giảm block rate).
 3. Thử viết thêm `GoRulesEngineAdapter` implement cùng interface — chứng minh Adapter pattern cho phép đổi engine mà không sửa `FraudDetectionPipeline`.
+4. Dựng 3 instance của `fraud-detection-service` cục bộ (docker-compose), test kịch bản: publish `{"versionId": N}` qua Redis, đo thời gian tất cả instance đồng bộ xong; sau đó tắt Redis giữa lúc publish để test job polling reconciliation tự sửa lại đúng version sau tối đa 30s.

@@ -13,7 +13,7 @@ docker run -d --name system-report-job-db -e POSTGRES_DB=db_system_report_job \
 mvn -f system-report-job/pom.xml spring-boot:run
 ```
 
-Swagger UI: http://localhost:9093/system-report-job/swagger-ui.html
+Swagger UI: http://localhost:8080/system-report-job/swagger-ui.html
 
 ## Architecture
 
