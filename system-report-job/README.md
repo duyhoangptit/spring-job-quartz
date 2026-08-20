@@ -61,3 +61,19 @@ curl -X POST localhost:8080/system-report-job/api/tasks/start/TASK_ID
 ```
 
 Watch progress: `SELECT COUNT(*) FROM user_exports;` grows in chunks of 1000 as the job runs.
+
+### Operational notes
+
+- **Timeout riêng**: `SpringBatchJobAction` dùng key cấu hình riêng `app.batch.export.execution-timeout`
+  (mặc định `30m`), tách khỏi `app.job-action.execution-timeout` (30s) mà `HttpCallJobAction` dùng —
+  export 1 triệu dòng mất nhiều phút chứ không phải giây, nên cần chỉnh timeout này rộng rãi tương ứng
+  với khối lượng dữ liệu thực tế (seed 1M dòng có thể cần hơn 30 phút tuỳ phần cứng).
+- **Không có retention/purge**: mỗi lần Quartz fire job là một `JobInstance` mới (do `runAt` luôn khác
+  nhau) và `user_exports` là append-only theo thiết kế — không có cơ chế nào tự xoá dữ liệu cũ. Chạy
+  task định kỳ (ví dụ cron hàng giờ) lâu dài sẽ khiến `user_exports` và các bảng metadata
+  `BATCH_*`/`batch_step_execution` phình to không giới hạn; cần tự thêm job dọn dẹp nếu dùng lâu dài.
+- **Migration chạy ở mọi môi trường**: `V5`/`V6` (bảng `users`, `user_exports`) là migration Flyway
+  bình thường nên sẽ được tạo ở mọi môi trường, kể cả production, dù chúng chỉ phục vụ mục đích demo.
+- **Không che PII**: `user_exports` sao chép nguyên vẹn các trường PII (họ tên, email, số điện thoại,
+  ngày sinh, địa chỉ) không mask/ẩn — chấp nhận được với dữ liệu mock, nhưng ai tái sử dụng pattern này
+  cho export dữ liệu thật cần tự bổ sung retention và masking phù hợp.

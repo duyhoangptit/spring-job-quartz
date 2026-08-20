@@ -75,7 +75,9 @@ Schema chuẩn của Spring Batch cho Postgres (`BATCH_JOB_INSTANCE`, `BATCH_JOB
 `BATCH_JOB_EXECUTION_PARAMS`, `BATCH_JOB_EXECUTION_CONTEXT`, `BATCH_STEP_EXECUTION`,
 `BATCH_STEP_EXECUTION_CONTEXT` + 3 sequence) — copy nguyên văn từ
 `org/springframework/batch/core/schema-postgresql.sql` trong `spring-batch-core`, không tự chế lại DDL.
-`spring.batch.jdbc.initialize-schema=never` để Flyway là nguồn sự thật duy nhất, giống Quartz.
+Flyway là nguồn sự thật duy nhất cho schema này, giống Quartz — không có property
+`spring.batch.jdbc.initialize-schema` tương ứng để khai báo tường minh trong Spring Boot 4.1 (property
+này không tồn tại trong batch autoconfiguration của bản này, xem thêm ghi chú ở §6).
 
 ## 3. Mock data seeding (1 triệu bản ghi)
 
@@ -129,7 +131,9 @@ README của module sẽ có 1 mục ngắn ghi lại lệnh này.
   - `ItemProcessor<UserRecord, UserExportRecord> userExportProcessor()` — map 1-1, sinh
     `id = UUID.randomUUID()`, `exportedAt = Instant.now()`.
   - `ItemWriter<UserExportRecord> userExportWriter(DataSource)` — `JdbcBatchItemWriter`, `INSERT INTO
-    user_exports (...) VALUES (...)` với `BeanPropertyItemSqlParameterSourceProvider`.
+    user_exports (...) VALUES (...)` với `.itemPreparedStatementSetter(...)` lambda tường minh (không
+    dùng `BeanPropertyItemSqlParameterSourceProvider` vì `UserExportRecord` là Java record, không có
+    JavaBean getters mà provider đó cần).
   - `Step exportUsersStep(...)` — `chunk(1000, transactionManager)` (chunk size cấu hình qua
     `app.batch.export.chunk-size`, mặc định 1000).
   - `Job exportUsersJob(JobRepository, Step)` — 1 step duy nhất.
@@ -182,13 +186,17 @@ spring:
   batch:
     job:
       enabled: false
-    jdbc:
-      initialize-schema: never
 app:
   batch:
     export:
       chunk-size: 1000
+      execution-timeout: 30m
 ```
+
+Lưu ý: `spring.batch.jdbc.initialize-schema` **không tồn tại** trong batch autoconfiguration của Spring
+Boot 4.1 (đã xác minh trực tiếp trên jar thực tế) nên **không** được thêm vào `application.yml` —
+Flyway (`V7__create_spring_batch_tables.sql`) vẫn là nguồn sự thật duy nhất cho schema `BATCH_*`, chỉ
+là không có property tương ứng để khai báo tường minh như với Quartz.
 
 ## 7. Testing strategy
 
