@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.UUID;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.job.Job;
@@ -25,7 +26,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @SpringBootTest
 @ActiveProfiles("test")
 @Testcontainers
-class UserExportBatchConfigIT {
+class UserExportBatchConfigTest {
 
     @Container
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine");
@@ -48,6 +49,14 @@ class UserExportBatchConfigIT {
 
     @Autowired
     Job exportUsersJob;
+
+    // Both test methods share one Testcontainers Postgres instance for the whole class, and the
+    // batch job reads/writes the full `users`/`user_exports` tables (no per-test scoping), so each
+    // test must start from a clean slate to keep its row-count assertions independent of test order.
+    @BeforeEach
+    void cleanDatabase() {
+        jdbcTemplate.execute("TRUNCATE TABLE user_exports, users, batch_job_instance CASCADE");
+    }
 
     private void seedUsers(int count) {
         for (int i = 0; i < count; i++) {
@@ -82,5 +91,35 @@ class UserExportBatchConfigIT {
                 "SELECT COUNT(*) FROM batch_step_execution WHERE step_name = 'exportUsersStep' AND status = 'COMPLETED'",
                 Integer.class);
         assertThat(stepExecutions).isEqualTo(1);
+    }
+
+    @Test
+    void runningJobTwiceSequentiallyReopensReaderCleanlyAndAppendsBothRuns() throws Exception {
+        seedUsers(20);
+        JobOperatorTestUtils testUtils = new JobOperatorTestUtils(jobOperator, jobRepository);
+        testUtils.setJob(exportUsersJob);
+
+        // Two full, non-overlapping runs against the real @StepScope + JdbcDefaultBatchConfiguration
+        // wiring via actual JobOperator.start() calls: the reader's open() -> read -> close()
+        // lifecycle completes entirely before the second run starts. This guards the functional
+        // behaviour the design relies on: repeated fires of the same append-only job must each
+        // complete cleanly and accumulate correctly (also the scenario Finding 4 asked for).
+        JobExecution firstExecution = testUtils.startJob(new JobParametersBuilder()
+                .addString("run", UUID.randomUUID().toString())
+                .toJobParameters());
+        assertThat(firstExecution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
+
+        JobExecution secondExecution = testUtils.startJob(new JobParametersBuilder()
+                .addString("run", UUID.randomUUID().toString())
+                .toJobParameters());
+        assertThat(secondExecution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
+
+        Integer exportedCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM user_exports", Integer.class);
+        assertThat(exportedCount).isEqualTo(40);
+
+        Integer completedSteps = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM batch_step_execution WHERE step_name = 'exportUsersStep' AND status = 'COMPLETED'",
+                Integer.class);
+        assertThat(completedSteps).isEqualTo(2);
     }
 }

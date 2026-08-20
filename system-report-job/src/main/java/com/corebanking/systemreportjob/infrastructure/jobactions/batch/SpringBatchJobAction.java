@@ -36,7 +36,7 @@ public class SpringBatchJobAction implements JobAction {
             JobOperator jobOperator,
             Job exportUsersJob,
             @Qualifier("jobActionTaskExecutor") AsyncTaskExecutor jobActionTaskExecutor,
-            @Value("${app.job-action.execution-timeout:30s}") Duration executionTimeout) {
+            @Value("${app.batch.export.execution-timeout:30m}") Duration executionTimeout) {
         this.jobOperator = jobOperator;
         this.exportUsersJob = exportUsersJob;
         this.jobActionTaskExecutor = jobActionTaskExecutor;

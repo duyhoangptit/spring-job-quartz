@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.UUID;
 import javax.sql.DataSource;
 
+import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
@@ -14,6 +15,7 @@ import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.infrastructure.item.ItemProcessor;
 import org.springframework.batch.infrastructure.item.ItemReader;
 import org.springframework.batch.infrastructure.item.ItemWriter;
+import org.springframework.batch.infrastructure.item.database.JdbcPagingItemReader;
 import org.springframework.batch.infrastructure.item.database.Order;
 import org.springframework.batch.infrastructure.item.database.builder.JdbcBatchItemWriterBuilder;
 import org.springframework.batch.infrastructure.item.database.builder.JdbcPagingItemReaderBuilder;
@@ -26,7 +28,8 @@ import org.springframework.transaction.PlatformTransactionManager;
 public class UserExportBatchConfig {
 
     @Bean
-    public ItemReader<UserRecord> userItemReader(DataSource dataSource) throws Exception {
+    @StepScope
+    public JdbcPagingItemReader<UserRecord> userItemReader(DataSource dataSource) throws Exception {
         return new JdbcPagingItemReaderBuilder<UserRecord>()
                 .name("userItemReader")
                 .dataSource(dataSource)

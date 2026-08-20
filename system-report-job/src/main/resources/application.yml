@@ -62,6 +62,8 @@ app:
     export:
       # Số bản ghi commit mỗi chunk khi export users -> user_exports.
       chunk-size: 1000
+      # Timeout riêng cho batch export (lớn hơn nhiều so với job HTTP thông thường vì xử lý hàng loạt bản ghi).
+      execution-timeout: 30m
 
 management:
   endpoints:
