@@ -26,6 +26,9 @@ spring:
         globally_quoted_identifiers: true
   flyway:
     enabled: true
+  batch:
+    job:
+      enabled: false
   quartz:
     job-store-type: jdbc
     jdbc:
@@ -55,6 +58,10 @@ app:
   job-action:
     # Thời gian tối đa chờ một job action hoàn tất trước khi huỷ và báo lỗi.
     execution-timeout: 30s
+  batch:
+    export:
+      # Số bản ghi commit mỗi chunk khi export users -> user_exports.
+      chunk-size: 1000
 
 management:
   endpoints:
