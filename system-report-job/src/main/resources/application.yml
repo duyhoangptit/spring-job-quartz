@@ -1,7 +1,5 @@
 server:
   port: ${SERVER_PORT:8080}
-  servlet:
-    context-path: /system-report-job
 
 spring:
   application:
