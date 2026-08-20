@@ -98,7 +98,8 @@ public class UserExportBatchConfig {
             ItemWriter<UserExportRecord> userExportWriter,
             @Value("${app.batch.export.chunk-size:1000}") int chunkSize) {
         return new StepBuilder("exportUsersStep", jobRepository)
-                .<UserRecord, UserExportRecord>chunk(chunkSize, transactionManager)
+                .<UserRecord, UserExportRecord>chunk(chunkSize)
+                .transactionManager(transactionManager)
                 .reader(userItemReader)
                 .processor(userExportProcessor)
                 .writer(userExportWriter)
