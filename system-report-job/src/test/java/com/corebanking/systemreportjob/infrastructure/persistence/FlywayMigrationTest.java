@@ -67,6 +67,9 @@ class FlywayMigrationTest {
             assertThat(tableExists(metaData, "job_definitions")).isTrue();
             assertThat(tableExists(metaData, "task_execution_history")).isTrue();
             assertThat(tableExists(metaData, "qrtz_job_details")).isTrue();
+            assertThat(tableExists(metaData, "users")).isTrue();
+            assertThat(tableExists(metaData, "user_exports")).isTrue();
+            assertThat(tableExists(metaData, "batch_job_instance")).isTrue();
         }
     }
 
