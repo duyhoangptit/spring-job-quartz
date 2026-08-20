@@ -32,3 +32,32 @@ mvn -f system-report-job/pom.xml test
 ```
 
 Persistence/scheduler/end-to-end tests use Testcontainers — Docker must be running locally.
+
+## Sample data: 1M mock users + Spring Batch export job
+
+Seed the `users` table with 1,000,000 mock rows (local dev DB only — **not** run by tests or on
+startup):
+
+```bash
+psql "postgresql://tigerpro:secret@localhost:5432/db_system_report_job" \
+  -f src/main/resources/db/seed/seed_users_1m.sql
+```
+
+Create and start a job that exports `users` into `user_exports` in chunks of 1000 via Spring Batch:
+
+```bash
+curl -X POST localhost:8080/system-report-job/api/job-definitions \
+  -H 'Content-Type: application/json' \
+  -d '{"jobType":"EXPORT_USERS","expression":"{}"}'
+# -> note the returned "id" as JOB_DEFINITION_ID
+
+curl -X POST localhost:8080/system-report-job/api/tasks \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"export-users-hourly","group":"reports","jobDefinitionId":"JOB_DEFINITION_ID",
+       "triggerType":"CRON","cronExpression":"0 0 * * * ?"}'
+# -> note the returned "id" as TASK_ID
+
+curl -X POST localhost:8080/system-report-job/api/tasks/start/TASK_ID
+```
+
+Watch progress: `SELECT COUNT(*) FROM user_exports;` grows in chunks of 1000 as the job runs.
