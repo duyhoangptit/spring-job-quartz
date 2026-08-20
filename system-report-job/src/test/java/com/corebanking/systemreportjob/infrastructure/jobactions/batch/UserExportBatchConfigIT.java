@@ -74,5 +74,13 @@ class UserExportBatchConfigIT {
         assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
         Integer exportedCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM user_exports", Integer.class);
         assertThat(exportedCount).isEqualTo(20);
+
+        // Proves the JDBC-backed JobRepository (BatchConfig) is actually wired, not Boot's
+        // default in-memory ResourcelessJobRepository: this row only exists if Spring Batch
+        // persisted step execution state to the real Postgres BATCH_* tables.
+        Integer stepExecutions = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM batch_step_execution WHERE step_name = 'exportUsersStep' AND status = 'COMPLETED'",
+                Integer.class);
+        assertThat(stepExecutions).isEqualTo(1);
     }
 }
