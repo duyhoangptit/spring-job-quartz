@@ -50,6 +50,7 @@ public class SpringBatchJobAction implements JobAction {
 
     @Override
     public void execute(JobDefinition definition) {
+        log.info("expression {}", definition.expression());
         Future<Void> future = jobActionTaskExecutor.submit(() -> runJob(definition));
         try {
             future.get(executionTimeout.toMillis(), TimeUnit.MILLISECONDS);

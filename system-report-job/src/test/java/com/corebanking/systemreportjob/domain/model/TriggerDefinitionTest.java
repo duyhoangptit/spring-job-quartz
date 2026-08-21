@@ -1,5 +1,6 @@
 package com.corebanking.systemreportjob.domain.model;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -51,6 +52,15 @@ class TriggerDefinitionTest {
         assertThatThrownBy(() -> new TriggerDefinition.DailyTimeInterval(LocalTime.of(9, 0), LocalTime.of(17, 0), 0))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("intervalInMinutes");
+    }
+
+    @Test
+    void eachDefinitionReportsItsTriggerType() {
+        assertThat(new TriggerDefinition.Cron("0 0 1 * * ?").type()).isEqualTo(TriggerType.CRON);
+        assertThat(new TriggerDefinition.Simple(60, 0).type()).isEqualTo(TriggerType.SIMPLE);
+        assertThat(new TriggerDefinition.CalendarInterval(1).type()).isEqualTo(TriggerType.CALENDAR_INTERVAL);
+        assertThat(new TriggerDefinition.DailyTimeInterval(LocalTime.of(9, 0), LocalTime.of(17, 0), 15).type())
+                .isEqualTo(TriggerType.DAILY_TIME_INTERVAL);
     }
 
     @Test

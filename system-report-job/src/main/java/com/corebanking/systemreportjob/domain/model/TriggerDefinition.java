@@ -3,11 +3,20 @@ package com.corebanking.systemreportjob.domain.model;
 import java.time.LocalTime;
 
 public sealed interface TriggerDefinition {
+
+    /** Loại trigger tương ứng — dùng để lưu/khôi phục qua boundary (DTO, entity) mà không cần instanceof. */
+    TriggerType type();
+
     record Cron(String cronExpression) implements TriggerDefinition {
         public Cron {
             if (cronExpression == null || cronExpression.isBlank()) {
                 throw new IllegalArgumentException("cronExpression là bắt buộc với trigger kiểu CRON");
             }
+        }
+
+        @Override
+        public TriggerType type() {
+            return TriggerType.CRON;
         }
     }
 
@@ -17,6 +26,11 @@ public sealed interface TriggerDefinition {
                 throw new IllegalArgumentException("intervalInSeconds phải lớn hơn 0 với trigger kiểu SIMPLE");
             }
         }
+
+        @Override
+        public TriggerType type() {
+            return TriggerType.SIMPLE;
+        }
     }
 
     record CalendarInterval(int intervalInDays) implements TriggerDefinition {
@@ -24,6 +38,11 @@ public sealed interface TriggerDefinition {
             if (intervalInDays <= 0) {
                 throw new IllegalArgumentException("intervalInDays phải lớn hơn 0 với trigger kiểu CALENDAR_INTERVAL");
             }
+        }
+
+        @Override
+        public TriggerType type() {
+            return TriggerType.CALENDAR_INTERVAL;
         }
     }
 
@@ -40,6 +59,11 @@ public sealed interface TriggerDefinition {
                 throw new IllegalArgumentException(
                         "intervalInMinutes phải lớn hơn 0 với trigger kiểu DAILY_TIME_INTERVAL");
             }
+        }
+
+        @Override
+        public TriggerType type() {
+            return TriggerType.DAILY_TIME_INTERVAL;
         }
     }
 }

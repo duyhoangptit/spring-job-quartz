@@ -6,13 +6,14 @@ import java.util.UUID;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
+import com.corebanking.systemreportjob.domain.model.TriggerType;
 import com.corebanking.systemreportjob.infrastructure.common.ValidCron;
 
 public record CreateTaskRequest(
         @NotBlank String name,
         @NotBlank String group,
         @NotNull UUID jobDefinitionId,
-        @NotBlank String triggerType,
+        @NotNull TriggerType triggerType,
         @ValidCron String cronExpression,
         Integer intervalInSeconds,
         Integer repeatCount,

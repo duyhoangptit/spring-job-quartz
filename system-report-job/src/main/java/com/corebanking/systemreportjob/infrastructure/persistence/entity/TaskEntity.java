@@ -5,10 +5,14 @@ import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
+
+import com.corebanking.systemreportjob.domain.model.TriggerType;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -32,7 +36,8 @@ public class TaskEntity extends BaseEntity {
     private UUID jobDefinitionId;
 
     @Column(name = "trigger_type", nullable = false)
-    private String triggerType;
+    @Enumerated(EnumType.STRING)
+    private TriggerType triggerType;
 
     @Column(name = "cron_expression")
     private String cronExpression;

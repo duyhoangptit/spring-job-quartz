@@ -20,6 +20,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import com.corebanking.systemreportjob.domain.model.PageResult;
 import com.corebanking.systemreportjob.domain.model.TaskExecutionRecord;
+import com.corebanking.systemreportjob.domain.model.TriggerType;
 import com.corebanking.systemreportjob.infrastructure.persistence.entity.JobDefinitionEntity;
 import com.corebanking.systemreportjob.infrastructure.persistence.entity.TaskEntity;
 import com.corebanking.systemreportjob.infrastructure.persistence.repository.JobDefinitionJpaRepository;
@@ -62,7 +63,7 @@ class TaskExecutionHistoryRepositoryAdapterTest {
         task.setName("daily-report");
         task.setTaskGroup("reports");
         task.setJobDefinitionId(jobDefinition.getId());
-        task.setTriggerType("SIMPLE");
+        task.setTriggerType(TriggerType.SIMPLE);
         task.setIntervalInSeconds(60);
         task.setRepeatCount(0);
         return taskJpaRepository.save(task).getId();

@@ -71,22 +71,15 @@ public class TaskRepositoryAdapter implements TaskRepositoryPort {
         entity.setTimezoneId(task.timezoneId());
         entity.setPriority(task.priority());
         entity.setDescription(task.description());
+        entity.setTriggerType(task.trigger().type());
         switch (task.trigger()) {
-            case TriggerDefinition.Cron c -> {
-                entity.setTriggerType("CRON");
-                entity.setCronExpression(c.cronExpression());
-            }
+            case TriggerDefinition.Cron c -> entity.setCronExpression(c.cronExpression());
             case TriggerDefinition.Simple s -> {
-                entity.setTriggerType("SIMPLE");
                 entity.setIntervalInSeconds(s.intervalInSeconds());
                 entity.setRepeatCount(s.repeatCount());
             }
-            case TriggerDefinition.CalendarInterval ci -> {
-                entity.setTriggerType("CALENDAR_INTERVAL");
-                entity.setIntervalInDays(ci.intervalInDays());
-            }
+            case TriggerDefinition.CalendarInterval ci -> entity.setIntervalInDays(ci.intervalInDays());
             case TriggerDefinition.DailyTimeInterval d -> {
-                entity.setTriggerType("DAILY_TIME_INTERVAL");
                 entity.setStartingDailyAt(d.startingDailyAt());
                 entity.setEndingDailyAt(d.endingDailyAt());
                 entity.setIntervalInMinutes(d.intervalInMinutes());
@@ -98,13 +91,11 @@ public class TaskRepositoryAdapter implements TaskRepositoryPort {
     private ScheduledTask toDomain(TaskEntity entity) {
         TriggerDefinition trigger =
                 switch (entity.getTriggerType()) {
-                    case "CRON" -> new TriggerDefinition.Cron(entity.getCronExpression());
-                    case "SIMPLE" -> new TriggerDefinition.Simple(
-                            entity.getIntervalInSeconds(), entity.getRepeatCount());
-                    case "CALENDAR_INTERVAL" -> new TriggerDefinition.CalendarInterval(entity.getIntervalInDays());
-                    case "DAILY_TIME_INTERVAL" -> new TriggerDefinition.DailyTimeInterval(
+                    case CRON -> new TriggerDefinition.Cron(entity.getCronExpression());
+                    case SIMPLE -> new TriggerDefinition.Simple(entity.getIntervalInSeconds(), entity.getRepeatCount());
+                    case CALENDAR_INTERVAL -> new TriggerDefinition.CalendarInterval(entity.getIntervalInDays());
+                    case DAILY_TIME_INTERVAL -> new TriggerDefinition.DailyTimeInterval(
                             entity.getStartingDailyAt(), entity.getEndingDailyAt(), entity.getIntervalInMinutes());
-                    default -> throw new IllegalStateException("Unknown trigger_type: " + entity.getTriggerType());
                 };
         return new ScheduledTask(
                 entity.getId(),

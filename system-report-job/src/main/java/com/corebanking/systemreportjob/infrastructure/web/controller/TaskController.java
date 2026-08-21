@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.corebanking.systemreportjob.domain.model.PageResult;
 import com.corebanking.systemreportjob.domain.model.ScheduledTask;
 import com.corebanking.systemreportjob.domain.model.TriggerDefinition;
+import com.corebanking.systemreportjob.domain.model.TriggerType;
 import com.corebanking.systemreportjob.infrastructure.common.ApiResponse;
 import com.corebanking.systemreportjob.infrastructure.common.PageResponse;
 import com.corebanking.systemreportjob.infrastructure.web.dto.request.CreateTaskRequest;
@@ -84,21 +85,20 @@ public class TaskController {
     }
 
     private CreateTaskCommand toCommand(CreateTaskRequest request) {
-        String triggerType = request.triggerType().toUpperCase();
+        TriggerType triggerType = request.triggerType();
         TriggerDefinition trigger =
                 switch (triggerType) {
-                    case "CRON" -> new TriggerDefinition.Cron(
+                    case CRON -> new TriggerDefinition.Cron(
                             require(request.cronExpression(), "cronExpression", triggerType));
-                    case "SIMPLE" -> new TriggerDefinition.Simple(
+                    case SIMPLE -> new TriggerDefinition.Simple(
                             require(request.intervalInSeconds(), "intervalInSeconds", triggerType),
                             require(request.repeatCount(), "repeatCount", triggerType));
-                    case "CALENDAR_INTERVAL" -> new TriggerDefinition.CalendarInterval(
+                    case CALENDAR_INTERVAL -> new TriggerDefinition.CalendarInterval(
                             require(request.intervalInDays(), "intervalInDays", triggerType));
-                    case "DAILY_TIME_INTERVAL" -> new TriggerDefinition.DailyTimeInterval(
+                    case DAILY_TIME_INTERVAL -> new TriggerDefinition.DailyTimeInterval(
                             require(request.startingDailyAt(), "startingDailyAt", triggerType),
                             require(request.endingDailyAt(), "endingDailyAt", triggerType),
                             require(request.intervalInMinutes(), "intervalInMinutes", triggerType));
-                    default -> throw new IllegalArgumentException("Unknown triggerType: " + request.triggerType());
                 };
         return new CreateTaskCommand(
                 request.name(),
@@ -111,7 +111,7 @@ public class TaskController {
     }
 
     /** Các field payload của trigger là optional trong DTO — thiếu thì trả 400 thay vì NPE/500. */
-    private static <T> T require(T value, String field, String triggerType) {
+    private static <T> T require(T value, String field, TriggerType triggerType) {
         if (value == null) {
             throw new IllegalArgumentException(field + " là bắt buộc với triggerType " + triggerType);
         }
