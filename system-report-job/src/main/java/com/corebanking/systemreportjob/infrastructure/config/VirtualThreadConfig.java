@@ -7,11 +7,15 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.core.task.support.TaskExecutorAdapter;
 
+import com.corebanking.systemreportjob.shared.common.logging.MdcTaskDecorator;
+
 @Configuration
 public class VirtualThreadConfig {
 
     @Bean(name = "jobActionTaskExecutor")
     public AsyncTaskExecutor jobActionTaskExecutor() {
-        return new TaskExecutorAdapter(Executors.newVirtualThreadPerTaskExecutor());
+        TaskExecutorAdapter executor = new TaskExecutorAdapter(Executors.newVirtualThreadPerTaskExecutor());
+        executor.setTaskDecorator(new MdcTaskDecorator());
+        return executor;
     }
 }

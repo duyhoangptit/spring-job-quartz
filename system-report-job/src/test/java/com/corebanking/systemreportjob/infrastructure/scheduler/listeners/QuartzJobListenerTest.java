@@ -2,13 +2,16 @@ package com.corebanking.systemreportjob.infrastructure.scheduler.listeners;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 
 import java.time.Duration;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.jupiter.api.Test;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.PageRequest;
@@ -102,5 +105,51 @@ class QuartzJobListenerTest {
             assertThat(result.content()).hasSize(1);
             assertThat(result.content().get(0).exceptionMessage()).contains("boom");
         });
+    }
+
+    @Test
+    void setsARequestIdInMdcForTheDurationOfTheJob() {
+        ScheduledTask task = sample("listener-request-id");
+        AtomicReference<String> requestIdSeenDuringExecution = new AtomicReference<>();
+        doAnswer(invocation -> {
+                    requestIdSeenDuringExecution.set(MDC.get("requestId"));
+                    return null;
+                })
+                .when(executeScheduledJobUseCase)
+                .execute(task.id());
+
+        adapter.scheduleTask(task);
+
+        await().atMost(Duration.ofSeconds(5)).untilAsserted(() -> assertThat(requestIdSeenDuringExecution.get())
+                .isNotNull());
+    }
+
+    @Test
+    void eachExecutionGetsItsOwnRequestId() {
+        ScheduledTask taskA = sample("listener-request-id-a");
+        ScheduledTask taskB = sample("listener-request-id-b");
+        AtomicReference<String> requestIdA = new AtomicReference<>();
+        AtomicReference<String> requestIdB = new AtomicReference<>();
+        doAnswer(invocation -> {
+                    requestIdA.set(MDC.get("requestId"));
+                    return null;
+                })
+                .when(executeScheduledJobUseCase)
+                .execute(taskA.id());
+        doAnswer(invocation -> {
+                    requestIdB.set(MDC.get("requestId"));
+                    return null;
+                })
+                .when(executeScheduledJobUseCase)
+                .execute(taskB.id());
+
+        adapter.scheduleTask(taskA);
+        adapter.scheduleTask(taskB);
+
+        await().atMost(Duration.ofSeconds(5)).untilAsserted(() -> {
+            assertThat(requestIdA.get()).isNotNull();
+            assertThat(requestIdB.get()).isNotNull();
+        });
+        assertThat(requestIdA.get()).isNotEqualTo(requestIdB.get());
     }
 }

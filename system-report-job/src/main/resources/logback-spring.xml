@@ -12,9 +12,16 @@
 
     <springProperty scope="context" name="APP_NAME" source="spring.application.name" defaultValue="report-job" />
     <springProperty scope="context" name="ROOT_LOG_LEVEL" source="logging.level.root" defaultValue="INFO" />
-    <springProperty scope="context" name="CONSOLE_LOG_PATTERN" source="logging.pattern.console"
+    <!-- Named APP_* rather than the CONSOLE_LOG_PATTERN/FILE_LOG_PATTERN names Spring Boot's own
+         org/springframework/boot/logging/logback/defaults.xml (included above) already claims for
+         its own default pattern. Boot resolves those two during its early bootstrap phase — before
+         Spring's Environment is ready — and attaches CONSOLE/FILE appenders using that value, so a
+         same-named <springProperty> declared here (which needs the Environment to resolve
+         `source=`) loses the race and never actually reaches the appenders, even though the
+         property itself reads back correctly afterwards. A distinct name sidesteps the race. -->
+    <springProperty scope="context" name="APP_CONSOLE_PATTERN" source="logging.pattern.console"
                     defaultValue="%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr([%thread]){magenta} %clr(%-5level) %clr([requestId:%X{requestId:-N/A}]){cyan} %clr(%logger{36}){yellow} %clr(-){faint} %msg%n%wEx" />
-    <springProperty scope="context" name="FILE_LOG_PATTERN" source="logging.pattern.file"
+    <springProperty scope="context" name="APP_FILE_PATTERN" source="logging.pattern.file"
                     defaultValue="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [requestId:%X{requestId:-N/A}] %logger{36} - %msg%n" />
     <springProperty scope="context" name="LOG_FILE" source="logging.file.name" defaultValue="logs/application.log" />
     <springProperty scope="context" name="JSON_LOG_FILE" source="app.logging.json.file.name" defaultValue="logs/application.json" />
@@ -27,14 +34,14 @@
 
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+            <pattern>${APP_CONSOLE_PATTERN}</pattern>
         </encoder>
     </appender>
 
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_FILE}</file>
         <encoder>
-            <pattern>${FILE_LOG_PATTERN}</pattern>
+            <pattern>${APP_FILE_PATTERN}</pattern>
         </encoder>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <fileNamePattern>logs/application.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
