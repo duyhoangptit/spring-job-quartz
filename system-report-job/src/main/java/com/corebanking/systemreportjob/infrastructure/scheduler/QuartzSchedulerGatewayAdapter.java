@@ -11,6 +11,7 @@ import org.quartz.SchedulerException;
 import org.quartz.Trigger;
 import org.springframework.stereotype.Component;
 
+import com.corebanking.systemreportjob.domain.exception.TaskNotScheduledException;
 import com.corebanking.systemreportjob.domain.model.ScheduledTask;
 import com.corebanking.systemreportjob.domain.model.TriggerState;
 import com.corebanking.systemreportjob.usecase.ports.out.SchedulerGatewayPort;
@@ -66,6 +67,19 @@ public class QuartzSchedulerGatewayAdapter implements SchedulerGatewayPort {
             scheduler.resumeJob(QuartzIdentifiers.jobKey(taskId));
         } catch (SchedulerException e) {
             throw new IllegalStateException("Không thể tiếp tục task " + taskId, e);
+        }
+    }
+
+    @Override
+    public void triggerNow(UUID taskId) {
+        JobKey jobKey = QuartzIdentifiers.jobKey(taskId);
+        try {
+            if (!scheduler.checkExists(jobKey)) {
+                throw new TaskNotScheduledException(taskId);
+            }
+            scheduler.triggerJob(jobKey);
+        } catch (SchedulerException e) {
+            throw new IllegalStateException("Không thể trigger ngay task " + taskId, e);
         }
     }
 

@@ -61,6 +61,12 @@ public class TaskController {
         return ApiResponse.ok();
     }
 
+    @PostMapping("/trigger-now/{id}")
+    public ApiResponse<Void> triggerNow(@PathVariable UUID id) {
+        taskManagementUseCase.triggerNow(id);
+        return ApiResponse.ok();
+    }
+
     @GetMapping("/{id}")
     public ApiResponse<TaskDetailResponse> detail(@PathVariable UUID id) {
         return ApiResponse.ok(TaskDetailResponse.from(taskManagementUseCase.getDetail(id)));

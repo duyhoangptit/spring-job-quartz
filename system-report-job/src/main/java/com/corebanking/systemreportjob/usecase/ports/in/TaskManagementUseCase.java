@@ -17,6 +17,12 @@ public interface TaskManagementUseCase {
 
     void resume(UUID taskId);
 
+    /**
+     * Kích hoạt job của task này chạy ngay lập tức (một lần), không cần đợi lịch cron/interval —
+     * hữu ích để test. Task phải đã được {@link #start} trước đó.
+     */
+    void triggerNow(UUID taskId);
+
     void delete(UUID taskId);
 
     void startAll();

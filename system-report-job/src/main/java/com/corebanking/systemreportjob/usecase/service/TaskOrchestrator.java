@@ -69,6 +69,12 @@ public class TaskOrchestrator implements TaskManagementUseCase {
     }
 
     @Override
+    public void triggerNow(UUID taskId) {
+        requireTask(taskId);
+        schedulerGatewayPort.triggerNow(taskId);
+    }
+
+    @Override
     public void delete(UUID taskId) {
         requireTask(taskId);
         schedulerGatewayPort.unscheduleTask(taskId);

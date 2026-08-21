@@ -64,6 +64,9 @@ app:
       chunk-size: 1000
       # Timeout riêng cho batch export (lớn hơn nhiều so với job HTTP thông thường vì xử lý hàng loạt bản ghi).
       execution-timeout: 30m
+    eod:
+      # Timeout cho sample job BANKING_EOD (job nhỏ nên timeout ngắn hơn export).
+      execution-timeout: 5m
 
 management:
   endpoints:
