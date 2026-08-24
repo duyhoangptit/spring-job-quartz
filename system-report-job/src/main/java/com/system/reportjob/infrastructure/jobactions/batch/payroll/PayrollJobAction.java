@@ -36,7 +36,7 @@ import com.system.reportjob.usecase.ports.in.HolidayQueryUseCase;
 public class PayrollJobAction implements JobAction {
 
     private static final Logger log = LoggerFactory.getLogger(PayrollJobAction.class);
-    private static final String PAY_DAY_OF_MONTH_START = "19";
+    private static final int DEFAULT_PAY_DAY_OF_MONTH = 19;
 
     private final JobOperator jobOperator;
     private final Job fptPayrollJob;
@@ -75,9 +75,10 @@ public class PayrollJobAction implements JobAction {
         }
         String countryCode = expression.countryCode() != null ? expression.countryCode() : "VN";
         String branchId = expression.branchId() != null ? expression.branchId() : "ALL";
+        int payDayOfMonth = expression.payDayOfMonth() != null ? expression.payDayOfMonth() : DEFAULT_PAY_DAY_OF_MONTH;
 
         LocalDate today = LocalDate.now();
-        LocalDate targetPayDate = resolveTargetPayDate(today, countryCode, branchId);
+        LocalDate targetPayDate = resolveTargetPayDate(today, countryCode, branchId, payDayOfMonth);
         if (!today.equals(targetPayDate)) {
             log.info(
                     "BANK_SALARY_PAYROLL: hôm nay ({}) chưa phải ngày trả lương (target={}), bỏ qua",
@@ -107,14 +108,19 @@ public class PayrollJobAction implements JobAction {
     }
 
     /**
-     * Ngày 19 hàng tháng nếu là ngày làm việc, ngược lại là ngày làm việc gần nhất sau đó.
+     * Ngày payDayOfMonth hàng tháng (mặc định 19, cấu hình được qua expression) nếu là ngày làm
+     * việc, ngược lại là ngày làm việc gần nhất sau đó. Clamp về ngày cuối tháng nếu
+     * payDayOfMonth lớn hơn số ngày thực tế của tháng đó (vd cấu hình 31 nhưng tháng chỉ có 28/30
+     * ngày).
      * getNextWorkingDay(start, ...) trả về ngày làm việc đầu tiên SAU start (không tính start),
-     * nên truyền vào ngày 18 để nó trả về đúng ngày 19 khi 19 là ngày làm việc, hoặc ngày làm
-     * việc kế tiếp nếu 19 rơi vào cuối tuần/lễ.
+     * nên truyền vào ngày liền trước để nó trả về đúng ngày mục tiêu khi đó là ngày làm việc, hoặc
+     * ngày làm việc kế tiếp nếu không phải.
      */
-    private LocalDate resolveTargetPayDate(LocalDate today, String countryCode, String branchId) {
-        LocalDate the19th = YearMonth.from(today).atDay(Integer.parseInt(PAY_DAY_OF_MONTH_START));
-        return holidayQueryUseCase.getNextWorkingDay(the19th.minusDays(1), countryCode, branchId);
+    private LocalDate resolveTargetPayDate(LocalDate today, String countryCode, String branchId, int payDayOfMonth) {
+        YearMonth month = YearMonth.from(today);
+        int clampedDay = Math.max(1, Math.min(payDayOfMonth, month.lengthOfMonth()));
+        LocalDate theTargetDay = month.atDay(clampedDay);
+        return holidayQueryUseCase.getNextWorkingDay(theTargetDay.minusDays(1), countryCode, branchId);
     }
 
     private Void runJob(JobDefinition definition, PayrollExpression expression, LocalDate targetPayDate)
@@ -141,5 +147,6 @@ public class PayrollJobAction implements JobAction {
         return null;
     }
 
-    record PayrollExpression(String companyCode, String csvDirectory, String countryCode, String branchId) {}
+    record PayrollExpression(
+            String companyCode, String csvDirectory, String countryCode, String branchId, Integer payDayOfMonth) {}
 }

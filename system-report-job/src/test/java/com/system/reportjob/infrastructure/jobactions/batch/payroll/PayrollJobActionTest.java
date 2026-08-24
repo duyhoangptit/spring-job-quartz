@@ -10,10 +10,12 @@ import static org.mockito.Mockito.when;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.job.Job;
@@ -97,5 +99,27 @@ class PayrollJobActionTest {
         org.assertj.core.api.Assertions.assertThatThrownBy(() -> action.execute(definition))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("FAILED");
+    }
+
+    @Test
+    void usesPayDayOfMonthFromExpressionWhenPresent() throws Exception {
+        HolidayQueryUseCase holidayQueryUseCase = mock(HolidayQueryUseCase.class);
+        ArgumentCaptor<LocalDate> startCaptor = ArgumentCaptor.forClass(LocalDate.class);
+        when(holidayQueryUseCase.getNextWorkingDay(startCaptor.capture(), any(), any()))
+                .thenReturn(
+                        LocalDate.now().plusDays(1)); // không phải hôm nay -> job sẽ không chạy, chỉ cần bắt được đúng
+        // start date truyền vào
+        JobOperator jobOperator = mock(JobOperator.class);
+        PayrollJobAction action = newAction(jobOperator, holidayQueryUseCase);
+        String expression =
+                "{\"companyCode\":\"FPT_SOFTWARE\",\"csvDirectory\":\"/tmp\",\"countryCode\":\"VN\",\"branchId\":\"ALL\",\"payDayOfMonth\":25}";
+        JobDefinition definition = new JobDefinition(UUID.randomUUID(), "BANK_SALARY_PAYROLL", expression, null);
+
+        action.execute(definition);
+
+        YearMonth thisMonth = YearMonth.now();
+        assertThat(startCaptor.getValue())
+                .isEqualTo(
+                        thisMonth.atDay(Math.min(25, thisMonth.lengthOfMonth())).minusDays(1));
     }
 }
