@@ -121,7 +121,7 @@ Linear job, 3 steps — `fptPayrollJob = holdFundsStep -> disburseStep -> notify
   duplicate logging here — this step only logs the aggregate).
 - Updates `payroll_batch_run.status = COMPLETED`.
 
-## 6. Database schema (`V10__create_payroll_tables.sql`)
+## 6. Database schema (`V11__create_payroll_tables.sql` — `V10` is the §7 `tasks.calendar_name` migration)
 
 ```sql
 CREATE TABLE fpt_company_account (
@@ -172,22 +172,43 @@ VALUES ('FPT_SOFTWARE', '9999000111222', 500000000000.00); -- 500 tỷ VND, đ�
 Seed balance sized so a `mvn spring-boot:run` + generated CSV can actually complete Step 1
 without manual DB setup.
 
-## 7. Creating the Task (documented, not seeded)
+## 7. Attaching the `bankHolidays` Quartz calendar to a Task (shared scheduling-engine change)
 
-Per the user's choice, no Flyway seed for `JobDefinition`/`Task`. Add a short section to
-`docs/bank-salary-sample/bank-salary-sample.md` (or a new `docs/bank-salary-sample/
-running-the-sample.md`) showing the two POST calls against the existing
-`JobDefinitionUseCase`/`TaskManagementUseCase` REST endpoints:
+Checked against current code: `QuartzTriggerFactory.build()` never calls Quartz's
+`TriggerBuilder.modifiedByCalendar(name)` — nothing in this system today can actually
+attach a registered Quartz `Calendar` (like `bankHolidays`) to a `Task`'s trigger. Reusing
+`bankHolidays` for real (not just re-deriving the same holiday data via SQL) requires a
+small, generic addition to the shared Task model — independent of trigger type, the same
+way `timezoneId`/`priority` already sit next to `trigger` on `ScheduledTask`:
+
+- `ScheduledTask` gains a new field `calendarName` (nullable `String`), inserted after
+  `trigger`: `(id, name, group, jobDefinitionId, trigger, calendarName, timezoneId,
+  priority, description)`.
+- `CreateTaskCommand` and `CreateTaskRequest` gain the same nullable `calendarName` field.
+- `tasks` table gains a nullable `calendar_name VARCHAR(100)` column (new migration).
+- `TaskEntity` gains `calendarName`; `TaskRepositoryAdapter.toEntity`/`toDomain` map it.
+- `QuartzTriggerFactory.build()` calls `builder.modifiedByCalendar(task.calendarName())`
+  when non-null, before `.withSchedule(...)` — works for any of the four trigger kinds,
+  not just `Cron`.
+- `TaskResponse`/`TaskDetailResponse` are unchanged (they don't expose trigger/schedule
+  fields today, confirmed by reading both files — no follow-on change needed there).
+
+This is a small (~7 files), backward-compatible, additive change: existing tasks keep
+`calendar_name = NULL` and behave exactly as before.
+
+## 8. Creating the Task (documented, not seeded)
+
+Per the user's choice, no Flyway seed for `JobDefinition`/`Task`. Add
+`docs/bank-salary-sample/running-the-sample.md` showing the two POST calls against the
+existing `JobDefinitionUseCase`/`TaskManagementUseCase` REST endpoints:
 
 1. Create a `JobDefinition` with `jobType = "BANK_SALARY_PAYROLL"` and `expression =
    {"companyCode":"FPT_SOFTWARE","csvDirectory":"<path>","countryCode":"VN","branchId":"ALL"}`.
 2. Create a `Task` referencing that `JobDefinition` with a `Cron` `TriggerDefinition`
-   (`0 0 8 * * ?`) — the exact request shape for attaching the `bankHolidays` calendar name
-   is whatever `TriggerDefinition`/`QuartzTriggerFactory` already expose today; the plan
-   step doing this will confirm the field name against current code rather than guess it
-   here.
+   (`0 0 8 * * ?`) and `calendarName = "bankHolidays"` (§7) — Quartz then never fires this
+   trigger on a weekend or bank holiday.
 
-## 8. CSV generation (30,000 employees)
+## 9. CSV generation (30,000 employees)
 
 - `scripts/generate-fpt-payroll-csv.py` (Python 3 stdlib only — `csv`, `random`, `argparse`;
   no new project dependency). Args: `--count` (default 30000), `--out`, `--invalid-rate`
@@ -204,7 +225,7 @@ running-the-sample.md`) showing the two POST calls against the existing
 - As part of implementation, the script is run once to produce a real 30,000-row file for
   local testing.
 
-## 9. Configuration (`application.yml`)
+## 10. Configuration (`application.yml`)
 
 ```yaml
 app:
@@ -219,17 +240,24 @@ app:
 runs the batch job on `jobActionTaskExecutor`, bounded by `execution-timeout`, via
 `JobOperator`.
 
-## 10. Testing
+## 11. Testing
 
 - Unit test for the pay-date resolution logic in `PayrollJobAction` (19th on a working day,
   19th on a weekend, 19th on a holiday with a multi-day bridge, mocking
-  `HolidayQueryUseCase`) — plain Mockito, no Spring context, per existing convention for
-  `usecase`-adjacent logic. Given `getNextWorkingDay` is delegated to, this is a thin test.
-- `PayrollBatchConfig` step behavior (skip path, hold-funds insufficient-balance path) is
-  exercised via a Testcontainers-backed batch test, following the existing pattern for
-  `infrastructure/persistence`/batch tests (Docker required).
+  `HolidayQueryUseCase` and `JobOperator`) — plain Mockito, no Spring context, matching
+  `SpringBatchJobActionTest`'s existing shape exactly (that test mocks `JobOperator`/`Job`
+  and never boots Spring Batch or touches a real DB).
+- Unit test for the Step 2 validation branch (`PayrollValidationProcessor`): valid row maps
+  through, malformed account number and non-positive amount each throw
+  `PayrollValidationException` — plain Mockito/JUnit, no Spring context needed since the
+  processor has no framework dependency beyond the interface.
+- No Testcontainers-backed test for `PayrollBatchConfig`'s tasklet SQL/chunk wiring itself:
+  `BankingEodBatchConfig` (the existing sample this mirrors) has zero test coverage at that
+  level today — only its `JobAction` wrapper is tested, with `Job`/`JobOperator` mocked out.
+  This sample follows the same precedent for consistency; the two unit tests above are what
+  cover its actual decision logic (pay-date resolution, record validation).
 
-## 11. Open items deferred out of this sample's scope
+## 12. Open items deferred out of this sample's scope
 
 - Idempotent re-run / retry of a partially-completed batch run.
 - Real notification integration (email/SMS/webhook) — logging only, as requested.
