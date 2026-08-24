@@ -67,6 +67,13 @@ app:
     eod:
       # Timeout cho sample job BANKING_EOD (job nhỏ nên timeout ngắn hơn export).
       execution-timeout: 5m
+    payroll:
+      # Chunk size cho sample BANK_SALARY_PAYROLL (giải ngân lương hàng loạt ~30.000 nhân viên).
+      chunk-size: 500
+      # Số record tối đa được phép skip (lỗi validate) trước khi cả step báo lỗi.
+      skip-limit: 1000
+      # Timeout dài hơn EOD vì xử lý khối lượng tương đương export (~30k dòng) qua 2 tasklet + 1 chunk step.
+      execution-timeout: 15m
 
 management:
   endpoints:
