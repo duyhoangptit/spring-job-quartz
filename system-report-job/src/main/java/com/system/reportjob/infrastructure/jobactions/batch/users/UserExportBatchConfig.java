@@ -1,4 +1,4 @@
-package com.system.reportjob.infrastructure.jobactions.batch;
+package com.system.reportjob.infrastructure.jobactions.batch.users;
 
 import java.sql.Timestamp;
 import java.time.Instant;

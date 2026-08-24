@@ -21,8 +21,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
 
-import com.system.reportjob.domain.model.JobDefinition;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.system.reportjob.domain.model.JobDefinition;
 
 class HttpCallJobActionTest {
 

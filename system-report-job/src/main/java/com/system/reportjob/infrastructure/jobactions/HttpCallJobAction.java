@@ -17,8 +17,8 @@ import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
-import com.system.reportjob.domain.model.JobDefinition;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.system.reportjob.domain.model.JobDefinition;
 
 @Component
 public class HttpCallJobAction implements JobAction {

@@ -1,4 +1,4 @@
-package com.system.reportjob.infrastructure.jobactions.sample;
+package com.system.reportjob.infrastructure.jobactions.batch.sample;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

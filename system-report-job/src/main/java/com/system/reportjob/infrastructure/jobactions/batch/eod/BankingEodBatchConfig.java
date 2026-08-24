@@ -1,4 +1,4 @@
-package com.system.reportjob.infrastructure.jobactions.batch;
+package com.system.reportjob.infrastructure.jobactions.batch.eod;
 
 import javax.sql.DataSource;
 

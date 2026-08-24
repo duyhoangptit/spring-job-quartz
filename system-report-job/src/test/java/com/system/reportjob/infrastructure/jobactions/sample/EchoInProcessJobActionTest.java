@@ -8,6 +8,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 import com.system.reportjob.domain.model.JobDefinition;
+import com.system.reportjob.infrastructure.jobactions.batch.sample.EchoInProcessJobAction;
 
 class EchoInProcessJobActionTest {
 

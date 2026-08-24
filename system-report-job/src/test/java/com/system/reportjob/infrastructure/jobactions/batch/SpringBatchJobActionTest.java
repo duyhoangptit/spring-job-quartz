@@ -26,6 +26,7 @@ import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.core.task.support.TaskExecutorAdapter;
 
 import com.system.reportjob.domain.model.JobDefinition;
+import com.system.reportjob.infrastructure.jobactions.batch.users.SpringBatchJobAction;
 
 class SpringBatchJobActionTest {
 
