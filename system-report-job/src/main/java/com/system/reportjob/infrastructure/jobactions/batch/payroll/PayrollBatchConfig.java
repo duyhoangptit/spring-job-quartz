@@ -20,7 +20,6 @@ import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.infrastructure.item.ItemProcessor;
 import org.springframework.batch.infrastructure.item.file.FlatFileItemReader;
 import org.springframework.batch.infrastructure.item.file.builder.FlatFileItemReaderBuilder;
-import org.springframework.batch.infrastructure.item.file.mapping.RecordFieldSetMapper;
 import org.springframework.batch.infrastructure.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -129,7 +128,20 @@ public class PayrollBatchConfig {
                 .delimited()
                 .delimiter(",")
                 .names("employeeId", "accountNumber", "fullName", "salaryAmount")
-                .fieldSetMapper(new RecordFieldSetMapper<>(PayrollCsvRecord.class))
+                .fieldSetMapper(fieldSet -> {
+                    BigDecimal salaryAmount;
+                    try {
+                        salaryAmount = fieldSet.readBigDecimal("salaryAmount");
+                    } catch (NumberFormatException ex) {
+                        salaryAmount =
+                                null; // dòng lỗi định dạng số tiền - sẽ bị PayrollValidationProcessor skip vì null
+                    }
+                    return new PayrollCsvRecord(
+                            fieldSet.readString("employeeId"),
+                            fieldSet.readString("accountNumber"),
+                            fieldSet.readString("fullName"),
+                            salaryAmount);
+                })
                 .linesToSkip(1)
                 .build();
     }
