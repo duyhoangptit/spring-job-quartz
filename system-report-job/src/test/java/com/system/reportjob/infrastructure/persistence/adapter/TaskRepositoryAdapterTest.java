@@ -68,6 +68,22 @@ class TaskRepositoryAdapterTest {
     }
 
     @Test
+    void roundTripsATaskWithACalendarName() {
+        ScheduledTask saved = adapter.save(new ScheduledTask(
+                UUID.randomUUID(),
+                "daily-report",
+                "reports",
+                sample(new TriggerDefinition.Cron("0 0 8 * * ?")).jobDefinitionId(),
+                new TriggerDefinition.Cron("0 0 8 * * ?"),
+                "bankHolidays",
+                "UTC",
+                5,
+                "desc"));
+
+        assertThat(adapter.findById(saved.id())).contains(saved);
+    }
+
+    @Test
     void roundTripsADailyTimeIntervalTriggerTask() {
         var trigger = new TriggerDefinition.DailyTimeInterval(LocalTime.of(9, 0), LocalTime.of(17, 0), 15);
 

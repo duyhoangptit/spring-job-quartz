@@ -28,6 +28,10 @@ class QuartzTriggerFactoryTest {
         return new ScheduledTask(UUID.randomUUID(), "t", "g", UUID.randomUUID(), trigger, timezoneId, 5, null);
     }
 
+    private ScheduledTask taskWithCalendar(TriggerDefinition trigger, String calendarName) {
+        return new ScheduledTask(UUID.randomUUID(), "t", "g", UUID.randomUUID(), trigger, calendarName, "UTC", 5, null);
+    }
+
     @Test
     void buildsCronTriggerWithUtcWhenTimezoneIsNull() {
         Trigger trigger = factory.build(taskWith(new TriggerDefinition.Cron("0 0 1 * * ?"), null));
@@ -69,5 +73,19 @@ class QuartzTriggerFactoryTest {
 
         assertThat(trigger).isInstanceOf(DailyTimeIntervalTrigger.class);
         assertThat(((DailyTimeIntervalTrigger) trigger).getRepeatInterval()).isEqualTo(15);
+    }
+
+    @Test
+    void attachesTheCalendarWhenTaskHasACalendarName() {
+        Trigger trigger = factory.build(taskWithCalendar(new TriggerDefinition.Cron("0 0 8 * * ?"), "bankHolidays"));
+
+        assertThat(trigger.getCalendarName()).isEqualTo("bankHolidays");
+    }
+
+    @Test
+    void leavesCalendarNameNullWhenTaskHasNone() {
+        Trigger trigger = factory.build(taskWith(new TriggerDefinition.Cron("0 0 8 * * ?")));
+
+        assertThat(trigger.getCalendarName()).isNull();
     }
 }

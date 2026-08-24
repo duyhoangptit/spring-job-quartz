@@ -39,6 +39,9 @@ public class TaskEntity extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private TriggerType triggerType;
 
+    @Column(name = "calendar_name")
+    private String calendarName;
+
     @Column(name = "cron_expression")
     private String cronExpression;
 

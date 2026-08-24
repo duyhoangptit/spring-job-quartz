@@ -28,6 +28,9 @@ public class QuartzTriggerFactory {
         if (task.priority() != null) {
             builder = builder.withPriority(task.priority());
         }
+        if (task.calendarName() != null && !task.calendarName().isBlank()) {
+            builder = builder.modifiedByCalendar(task.calendarName());
+        }
 
         return switch (task.trigger()) {
             case TriggerDefinition.Cron c -> builder.withSchedule(CronScheduleBuilder.cronSchedule(c.cronExpression())

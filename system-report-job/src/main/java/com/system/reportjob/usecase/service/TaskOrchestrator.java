@@ -45,6 +45,7 @@ public class TaskOrchestrator implements TaskManagementUseCase {
                 command.group(),
                 command.jobDefinitionId(),
                 command.trigger(),
+                command.calendarName(),
                 command.timezoneId(),
                 command.priority(),
                 command.description());

@@ -21,6 +21,7 @@ public record CreateTaskRequest(
         Integer intervalInMinutes,
         LocalTime startingDailyAt,
         LocalTime endingDailyAt,
+        String calendarName,
         String timezoneId,
         Integer priority,
         String description) {}

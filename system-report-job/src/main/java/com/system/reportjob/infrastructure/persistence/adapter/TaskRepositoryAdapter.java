@@ -71,6 +71,7 @@ public class TaskRepositoryAdapter implements TaskRepositoryPort {
         entity.setTimezoneId(task.timezoneId());
         entity.setPriority(task.priority());
         entity.setDescription(task.description());
+        entity.setCalendarName(task.calendarName());
         entity.setTriggerType(task.trigger().type());
         switch (task.trigger()) {
             case TriggerDefinition.Cron c -> entity.setCronExpression(c.cronExpression());
@@ -103,6 +104,7 @@ public class TaskRepositoryAdapter implements TaskRepositoryPort {
                 entity.getTaskGroup(),
                 entity.getJobDefinitionId(),
                 trigger,
+                entity.getCalendarName(),
                 entity.getTimezoneId(),
                 entity.getPriority(),
                 entity.getDescription());

@@ -111,6 +111,7 @@ public class TaskController {
                 request.group(),
                 request.jobDefinitionId(),
                 trigger,
+                request.calendarName(),
                 request.timezoneId(),
                 request.priority(),
                 request.description());
