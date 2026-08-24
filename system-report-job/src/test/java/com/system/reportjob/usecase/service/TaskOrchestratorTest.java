@@ -21,7 +21,7 @@ import org.springframework.data.domain.PageRequest;
 
 import com.system.reportjob.domain.exception.JobDefinitionNotFoundException;
 import com.system.reportjob.domain.exception.TaskNotFoundException;
-import com.corebanking.systemreportjob.domain.model.*;
+import com.system.reportjob.domain.model.*;
 import com.system.reportjob.usecase.ports.in.CreateTaskCommand;
 import com.system.reportjob.usecase.ports.out.JobDefinitionRepositoryPort;
 import com.system.reportjob.usecase.ports.out.SchedulerGatewayPort;
