@@ -6,9 +6,9 @@
          regardless of appender, so no call site has to remember to mask manually.
          Registered for every built-in alias of the message conversion word (m/msg/message),
          since a pattern using %m would otherwise bypass a rule registered only for %msg. -->
-    <conversionRule conversionWord="msg" class="com.corebanking.systemreportjob.shared.common.logging.MaskingMessageConverter" />
-    <conversionRule conversionWord="m" class="com.corebanking.systemreportjob.shared.common.logging.MaskingMessageConverter" />
-    <conversionRule conversionWord="message" class="com.corebanking.systemreportjob.shared.common.logging.MaskingMessageConverter" />
+    <conversionRule conversionWord="msg" class="com.system.reportjob.shared.common.logging.MaskingMessageConverter" />
+    <conversionRule conversionWord="m" class="com.system.reportjob.shared.common.logging.MaskingMessageConverter" />
+    <conversionRule conversionWord="message" class="com.system.reportjob.shared.common.logging.MaskingMessageConverter" />
 
     <springProperty scope="context" name="APP_NAME" source="spring.application.name" defaultValue="report-job" />
     <springProperty scope="context" name="ROOT_LOG_LEVEL" source="logging.level.root" defaultValue="INFO" />
