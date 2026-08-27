@@ -238,6 +238,7 @@ public class PayrollBatchConfig {
                 .start(holdFundsStep)
                 .next(disburseStep)
                 .next(notifyStep)
+                .listener(new PayrollBatchNotificationListener())
                 .build();
     }
 }
