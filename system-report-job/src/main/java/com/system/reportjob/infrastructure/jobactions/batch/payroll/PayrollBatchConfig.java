@@ -3,9 +3,11 @@ package com.system.reportjob.infrastructure.jobactions.batch.payroll;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.sql.DataSource;
 
 import org.slf4j.Logger;
@@ -25,7 +27,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.retry.RetryPolicy;
+import org.springframework.dao.DeadlockLoserDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.retry.policy.TimeoutRetryPolicy;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
@@ -169,16 +174,28 @@ public class PayrollBatchConfig {
             PayrollDisbursementWriter payrollDisbursementWriter,
             @Value("${app.batch.payroll.chunk-size:500}") int chunkSize,
             @Value("${app.batch.payroll.skip-limit:1000}") int skipLimit) {
+        // Cấu hình Policy theo phong cách Spring Framework 7 mới nhất
+        RetryPolicy retryPolicy = RetryPolicy.builder()
+                .maxRetries(3) // Thử lại tối đa 3 lần (Không tính lần chạy đầu)
+                .includes(Set.of(RemoteAccessException.class, DeadlockLoserDataAccessException.class)) // Các lỗi được phép retry
+                .delay(Duration.ofSeconds(2)) // Đợi 2 giây trước khi thử lại
+                .build(); // Trả về đối tượng RetryPolicy chuẩn
+
         return new StepBuilder("disburseStep", jobRepository)
                 .<PayrollCsvRecord, PayrollDisbursementRecord>chunk(chunkSize)
                 .transactionManager(transactionManager)
                 .reader(csvEmployeeReader)
                 .processor(payrollValidationProcessor)
                 .writer(payrollDisbursementWriter)
-                .faultTolerant()
+                .faultTolerant() // Kích hoạt tính năng chịu lỗi
+                // skip record with validation error
                 .skip(PayrollValidationException.class)
                 .skipLimit(skipLimit)
                 .skipListener(payrollDisbursementWriter)
+                // retry
+                .retry(RemoteAccessException.class)
+                .retryLimit(3) // Thử lại tối đa 3 lần
+                .retryPolicy(retryPolicy)
                 .build();
     }
 
