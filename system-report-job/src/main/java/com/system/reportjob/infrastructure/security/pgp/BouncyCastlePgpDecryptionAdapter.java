@@ -122,40 +122,63 @@ public class BouncyCastlePgpDecryptionAdapter implements PgpDecryptionGatewayPor
 
             Files.createDirectories(tempDir);
             Path decryptedFile = tempDir.resolve(UUID.randomUUID() + ".decrypted");
-            try (InputStream literalIn = literalData.getInputStream();
-                    OutputStream fileOut = Files.newOutputStream(decryptedFile)) {
-                byte[] buffer = new byte[8192];
-                int read;
-                while ((read = literalIn.read(buffer)) >= 0) {
-                    onePassSignature.update(buffer, 0, read);
-                    fileOut.write(buffer, 0, read);
-                }
-            }
-            setOwnerOnlyPermissionsIfSupported(decryptedFile);
-
-            Object signatureObject = plainFactory.nextObject();
-            if (!(signatureObject instanceof PGPSignatureList signatureList) || signatureList.isEmpty()) {
-                Files.deleteIfExists(decryptedFile);
-                throw new PgpSignatureInvalidException(
-                        companyCode, "File không có chữ ký PGP hợp lệ đi kèm (thiếu signature packet)");
-            }
-            PGPSignature signature = signatureList.get(0);
-            boolean verified;
+            // Từ đây trở đi file đã được tạo trên đĩa (chứa dữ liệu payroll/PII chưa được verify) - BẮT
+            // BUỘC phải xoá file này ở MỌI exception path phía dưới, không được để sót branch nào. Dùng
+            // catch(Exception) cấu trúc thay vì rải Files.deleteIfExists() ở từng nhánh throw riêng lẻ,
+            // để không phụ thuộc vào việc nhớ đủ mọi nhánh lỗi (IOException khi ghi file, khi set
+            // permission, khi đọc signature packet bị corrupt, v.v).
             try {
-                verified = onePassSignature.verify(signature);
-            } catch (PGPException e) {
-                Files.deleteIfExists(decryptedFile);
-                throw new PgpSignatureInvalidException(companyCode, "Lỗi khi verify chữ ký: " + e.getMessage());
+                writeDecryptedFileAndVerifySignature(
+                        plainFactory, literalData, onePassSignature, decryptedFile, companyCode);
+            } catch (RuntimeException | IOException | PGPException e) {
+                deleteQuietly(decryptedFile);
+                throw e;
             }
-            if (!verified) {
-                Files.deleteIfExists(decryptedFile);
-                throw new PgpSignatureInvalidException(
-                        companyCode, "Chữ ký PGP không khớp - file có thể đã bị sửa đổi hoặc giả mạo");
-            }
-
             return decryptedFile;
         } catch (IOException | PGPException e) {
             throw new PgpDecryptionFailedException(companyCode, e.getMessage());
+        }
+    }
+
+    /**
+     * Ghi literal data đã decrypt ra {@code decryptedFile} rồi verify chữ ký PGP đi kèm. Không tự xoá
+     * file khi lỗi - việc xoá file khi thất bại là trách nhiệm của caller ({@link #decryptAndVerify}),
+     * để đảm bảo MỌI exception (kể cả IOException khi ghi file/đọc signature packet corrupt) đều dẫn
+     * đến cleanup, không chỉ những nhánh throw tường minh trong method này.
+     */
+    private static void writeDecryptedFileAndVerifySignature(
+            PGPObjectFactory plainFactory,
+            PGPLiteralData literalData,
+            PGPOnePassSignature onePassSignature,
+            Path decryptedFile,
+            String companyCode)
+            throws IOException, PGPException {
+        try (InputStream literalIn = literalData.getInputStream();
+                OutputStream fileOut = Files.newOutputStream(decryptedFile)) {
+            byte[] buffer = new byte[8192];
+            int read;
+            while ((read = literalIn.read(buffer)) >= 0) {
+                onePassSignature.update(buffer, 0, read);
+                fileOut.write(buffer, 0, read);
+            }
+        }
+        setOwnerOnlyPermissionsIfSupported(decryptedFile);
+
+        Object signatureObject = plainFactory.nextObject();
+        if (!(signatureObject instanceof PGPSignatureList signatureList) || signatureList.isEmpty()) {
+            throw new PgpSignatureInvalidException(
+                    companyCode, "File không có chữ ký PGP hợp lệ đi kèm (thiếu signature packet)");
+        }
+        PGPSignature signature = signatureList.get(0);
+        boolean verified;
+        try {
+            verified = onePassSignature.verify(signature);
+        } catch (PGPException e) {
+            throw new PgpSignatureInvalidException(companyCode, "Lỗi khi verify chữ ký: " + e.getMessage());
+        }
+        if (!verified) {
+            throw new PgpSignatureInvalidException(
+                    companyCode, "Chữ ký PGP không khớp - file có thể đã bị sửa đổi hoặc giả mạo");
         }
     }
 
@@ -168,6 +191,14 @@ public class BouncyCastlePgpDecryptionAdapter implements PgpDecryptionGatewayPor
             Files.setPosixFilePermissions(file, PosixFilePermissions.fromString("rw-------"));
         } catch (UnsupportedOperationException e) {
             // Hệ điều hành không hỗ trợ POSIX permission (vd Windows) - bỏ qua, không phải lỗi.
+        }
+    }
+
+    private static void deleteQuietly(Path file) {
+        try {
+            Files.deleteIfExists(file);
+        } catch (IOException e) {
+            // Không được để lỗi cleanup che khuất exception chính (decrypt/verify) đang được ném ra.
         }
     }
 }

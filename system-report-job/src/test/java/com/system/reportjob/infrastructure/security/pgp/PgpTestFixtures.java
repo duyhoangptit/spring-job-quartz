@@ -123,6 +123,65 @@ final class PgpTestFixtures {
         return encryptedOut.toByteArray();
     }
 
+    /**
+     * Giống {@link #encryptAndSign} nhưng chữ ký được tính trên {@code signedPlaintext} còn literal
+     * data thực tế ghi vào output lại là {@code actualPlaintext} (khác nội dung, cùng độ dài) - mô
+     * phỏng trường hợp file bị tamper sau khi ký nhưng trước khi encrypt: decrypt vẫn thành công (MDC
+     * integrity packet chỉ bảo vệ tính toàn vẹn của luồng byte thực sự được mã hoá, không liên quan gì
+     * đến việc nội dung đó có khớp với signature hay không), nhưng
+     * {@code onePassSignature.verify(signature)} phải trả về false vì nội dung literal data không khớp
+     * với nội dung đã được ký. Dùng để test nhánh "decrypt thành công, verify chữ ký thất bại" - khác
+     * với trường hợp "không tìm thấy public key để verify" (ký bởi key lạ).
+     */
+    static byte[] encryptAndSignMismatchedContent(
+            byte[] signedPlaintext,
+            byte[] actualPlaintext,
+            String fileName,
+            String signerSecretKeyArmored,
+            char[] signerPassphrase,
+            String recipientPublicKeyArmored)
+            throws Exception {
+        if (signedPlaintext.length != actualPlaintext.length) {
+            throw new IllegalArgumentException("signedPlaintext và actualPlaintext phải cùng độ dài");
+        }
+        PGPSecretKeyRing signerKeyRing = new PGPSecretKeyRing(
+                PGPUtil.getDecoderStream(armoredStream(signerSecretKeyArmored)), new BcKeyFingerprintCalculator());
+        PGPSecretKey signerSecretKey = signerKeyRing.getSecretKey();
+        PGPPrivateKey signerPrivateKey = signerSecretKey.extractPrivateKey(
+                new BcPBESecretKeyDecryptorBuilder(new BcPGPDigestCalculatorProvider()).build(signerPassphrase));
+
+        PGPPublicKeyRing recipientKeyRing = new PGPPublicKeyRing(
+                PGPUtil.getDecoderStream(armoredStream(recipientPublicKeyArmored)), new BcKeyFingerprintCalculator());
+        PGPPublicKey recipientEncryptionKey = recipientKeyRing.getPublicKey();
+
+        PGPSignatureGenerator signatureGenerator = new PGPSignatureGenerator(
+                new BcPGPContentSignerBuilder(signerSecretKey.getPublicKey().getAlgorithm(), HashAlgorithmTags.SHA256));
+        signatureGenerator.init(org.bouncycastle.openpgp.PGPSignature.BINARY_DOCUMENT, signerPrivateKey);
+
+        ByteArrayOutputStream encryptedOut = new ByteArrayOutputStream();
+        PGPEncryptedDataGenerator encryptedDataGenerator = new PGPEncryptedDataGenerator(
+                new BcPGPDataEncryptorBuilder(SymmetricKeyAlgorithmTags.AES_256).setWithIntegrityPacket(true));
+        encryptedDataGenerator.addMethod(new BcPublicKeyKeyEncryptionMethodGenerator(recipientEncryptionKey));
+
+        try (ArmoredOutputStream armoredOut = new ArmoredOutputStream(encryptedOut);
+                OutputStream cipherOut = encryptedDataGenerator.open(armoredOut, new byte[1 << 16])) {
+            PGPCompressedDataGenerator compressedDataGenerator =
+                    new PGPCompressedDataGenerator(CompressionAlgorithmTags.ZIP);
+            try (OutputStream compressedOut = compressedDataGenerator.open(cipherOut)) {
+                signatureGenerator.generateOnePassVersion(false).encode(compressedOut);
+
+                PGPLiteralDataGenerator literalDataGenerator = new PGPLiteralDataGenerator();
+                try (OutputStream literalOut = literalDataGenerator.open(
+                        compressedOut, PGPLiteralData.BINARY, fileName, actualPlaintext.length, new Date())) {
+                    literalOut.write(actualPlaintext);
+                    signatureGenerator.update(signedPlaintext);
+                }
+                signatureGenerator.generate().encode(compressedOut);
+            }
+        }
+        return encryptedOut.toByteArray();
+    }
+
     private static String armor(byte[] encoded) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         try (ArmoredOutputStream armored = new ArmoredOutputStream(out)) {

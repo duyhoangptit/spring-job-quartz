@@ -109,16 +109,23 @@ class BouncyCastlePgpDecryptionAdapterTest {
 
     @Test
     void deletesTheDecryptedFileWhenSignatureVerificationFails() throws Exception {
+        // Ký bởi ĐÚNG company key (không phải key lạ) nhưng nội dung literal data thực tế bị tamper sau
+        // khi ký - decrypt phải thành công (khớp key, khớp signer key ID), file phải được ghi ra đĩa,
+        // rồi mới đến bước onePassSignature.verify(...) trả về false. Đây là nhánh nguy hiểm nhất: khác
+        // với throwsSignatureInvalidWhenSignedByAnUnrelatedKey (ném exception TRƯỚC khi tạo file vì
+        // không tìm thấy signer key), test này phải đi xuyên qua toàn bộ write-to-disk rồi mới fail ở
+        // verify(), để thực sự exercise được Files.deleteIfExists(decryptedFile) ở cuối method.
         PgpKeyPairArmored bankKeyPair = PgpTestFixtures.generateKeyPair("bank@tpbank.test", "bank-pass".toCharArray());
-        PgpKeyPairArmored impostorKeyPair =
-                PgpTestFixtures.generateKeyPair("impostor@evil.test", "impostor-pass".toCharArray());
         PgpKeyPairArmored companyKeyPair =
                 PgpTestFixtures.generateKeyPair("fpt@fpt.test", "company-pass".toCharArray());
-        byte[] encrypted = PgpTestFixtures.encryptAndSign(
-                "data".getBytes(StandardCharsets.UTF_8),
+        byte[] signedPlaintext = "data".getBytes(StandardCharsets.UTF_8);
+        byte[] tamperedPlaintext = "hack".getBytes(StandardCharsets.UTF_8);
+        byte[] encrypted = PgpTestFixtures.encryptAndSignMismatchedContent(
+                signedPlaintext,
+                tamperedPlaintext,
                 "payroll.csv",
-                impostorKeyPair.secretKeyArmored(),
-                "impostor-pass".toCharArray(),
+                companyKeyPair.secretKeyArmored(),
+                "company-pass".toCharArray(),
                 bankKeyPair.publicKeyArmored());
         Path encryptedFile = tempDir.resolve("payroll.csv.pgp");
         Files.write(encryptedFile, encrypted);
@@ -133,8 +140,14 @@ class BouncyCastlePgpDecryptionAdapterTest {
         BouncyCastlePgpDecryptionAdapter adapter = new BouncyCastlePgpDecryptionAdapter(tempDir.toString());
         long filesBefore = Files.list(tempDir).count();
 
+        // Assert cụ thể reason text thay vì chỉ isInstanceOf(...) - để chứng minh test này thực sự đi
+        // tới nhánh "verify() trả về false" (cuối method, SAU khi đã ghi file ra đĩa), chứ không phải
+        // lỡ rơi vào nhánh "không tìm thấy signer key" (đầu method, TRƯỚC khi tạo file) như
+        // throwsSignatureInvalidWhenSignedByAnUnrelatedKey.
         assertThatThrownBy(() -> adapter.decryptAndVerify(encryptedFile, keyConfig))
-                .isInstanceOf(PgpSignatureInvalidException.class);
+                .isInstanceOf(PgpSignatureInvalidException.class)
+                .extracting(e -> ((PgpSignatureInvalidException) e).getMessageArgs()[1])
+                .isEqualTo("Chữ ký PGP không khớp - file có thể đã bị sửa đổi hoặc giả mạo");
 
         assertThat(Files.list(tempDir).count()).isEqualTo(filesBefore);
     }
