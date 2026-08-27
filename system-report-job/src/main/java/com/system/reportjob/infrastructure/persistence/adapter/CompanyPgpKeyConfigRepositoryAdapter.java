@@ -25,9 +25,13 @@ public class CompanyPgpKeyConfigRepositoryAdapter implements PgpKeyConfigReposit
 
     @Override
     public CompanyPgpKeyConfig save(CompanyPgpKeyConfig config) {
-        CompanyPgpKeyConfigEntity entity =
-                jpaRepository.findByCompanyCode(config.companyCode()).orElseGet(CompanyPgpKeyConfigEntity::new);
-        entity.setId(config.id());
+        CompanyPgpKeyConfigEntity entity = jpaRepository
+                .findByCompanyCode(config.companyCode())
+                .orElseGet(() -> {
+                    CompanyPgpKeyConfigEntity newEntity = new CompanyPgpKeyConfigEntity();
+                    newEntity.setId(config.id());
+                    return newEntity;
+                });
         entity.setCompanyCode(config.companyCode());
         entity.setBankPrivateKeyEncrypted(cipher.seal(config.bankPrivateKeyArmored()));
         entity.setBankKeyPassphraseEncrypted(cipher.seal(config.bankKeyPassphrase()));
