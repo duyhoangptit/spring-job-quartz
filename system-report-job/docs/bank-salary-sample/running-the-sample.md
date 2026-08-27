@@ -24,13 +24,13 @@ phải tên `FPT_PAYROLL_2026-09-21.csv`.
 ## 2. Tạo JobDefinition
 
 ```bash
-curl -X POST http://localhost:8080/system-report-job/api/job-definitions \
-  -H "Content-Type: application/json" \
-  -d '{
+curl --location 'http://localhost:8081/api/job-definitions' \
+--header 'Content-Type: application/json' \
+--data '{
     "jobType": "BANK_SALARY_PAYROLL",
-    "expression": "{\"companyCode\":\"FPT_SOFTWARE\",\"csvDirectory\":\"docs/bank-salary-sample/sample-data\",\"countryCode\":\"VN\",\"branchId\":\"ALL\",\"payDayOfMonth\":19}",
+    "expression": "{\"companyCode\":\"FPT_SOFTWARE\",\"csvDirectory\":\"docs/bank-salary-sample/sample-data\",\"countryCode\":\"VN\",\"branchId\":\"ALL\",\"payDayOfMonth\":25}",
     "description": "Chuyển lương hàng loạt FPT Software"
-  }'
+}'
 ```
 
 Trường `payDayOfMonth` là tùy chọn (mặc định là 19); bạn có thể thay đổi nó để phù hợp với chính sách lương của công ty khác.
@@ -40,7 +40,7 @@ Lấy `data.id` trong response JSON, dùng làm `jobDefinitionId` ở bước sa
 ## 3. Tạo Task (Cron hàng ngày, gắn calendar bankHolidays)
 
 ```bash
-curl -X POST http://localhost:8080/system-report-job/api/tasks \
+curl -X POST http://localhost:8080/api/tasks \
   -H "Content-Type: application/json" \
   -d '{
     "name": "fpt-payroll-monthly",
@@ -61,8 +61,8 @@ kiện "hôm nay có đúng target pay date không" trên mỗi lần fire còn 
 ## 4. Kích hoạt + chạy thử ngay
 
 ```bash
-curl -X POST http://localhost:8080/system-report-job/api/tasks/start/<task-id>
-curl -X POST http://localhost:8080/system-report-job/api/tasks/trigger-now/<task-id>
+curl -X POST http://localhost:8080/api/tasks/start/<task-id>
+curl -X POST http://localhost:8080/api/tasks/trigger-now/<task-id>
 ```
 
 `trigger-now` vẫn đi qua toàn bộ logic của `PayrollJobAction`, bao gồm cả việc kiểm tra "hôm
