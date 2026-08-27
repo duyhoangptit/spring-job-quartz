@@ -10,7 +10,8 @@ public enum ErrorCode {
     PGP_KEY_CONFIG_NOT_FOUND("pgp_key_config.not_found"),
     PGP_KEY_CONFIG_ALREADY_EXISTS("pgp_key_config.already_exists"),
     PGP_DECRYPTION_FAILED("pgp.decryption_failed"),
-    PGP_SIGNATURE_INVALID("pgp.signature_invalid");
+    PGP_SIGNATURE_INVALID("pgp.signature_invalid"),
+    PGP_ENCRYPTION_FAILED("pgp.encryption_failed");
 
     private final String messageKey;
 
