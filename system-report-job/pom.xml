@@ -23,7 +23,7 @@
         <testcontainers.version>1.21.4</testcontainers.version>
         <awaitility.version>4.2.2</awaitility.version>
         <springdoc.version>2.7.0</springdoc.version>
-        <bouncycastle.version>1.80</bouncycastle.version>
+        <bouncycastle.version>1.85</bouncycastle.version>
     </properties>
 
     <dependencies>
