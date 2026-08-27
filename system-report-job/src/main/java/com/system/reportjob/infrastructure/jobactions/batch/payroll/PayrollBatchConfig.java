@@ -115,6 +115,7 @@ public class PayrollBatchConfig {
             JobRepository jobRepository, PlatformTransactionManager transactionManager, Tasklet holdFundsTasklet) {
         return new StepBuilder("holdFundsStep", jobRepository)
                 .tasklet(holdFundsTasklet, transactionManager)
+                .listener(new HoldFundsStepExecutionListener())
                 .build();
     }
 
