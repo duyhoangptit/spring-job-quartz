@@ -8,6 +8,7 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Iterator;
 import java.util.UUID;
@@ -121,7 +122,7 @@ public class BouncyCastlePgpDecryptionAdapter implements PgpDecryptionGatewayPor
             }
 
             Files.createDirectories(tempDir);
-            Path decryptedFile = tempDir.resolve(UUID.randomUUID() + ".decrypted");
+            Path decryptedFile = createOwnerOnlyFile(tempDir, UUID.randomUUID() + ".decrypted");
             // Từ đây trở đi file đã được tạo trên đĩa (chứa dữ liệu payroll/PII chưa được verify) - BẮT
             // BUỘC phải xoá file này ở MỌI exception path phía dưới, không được để sót branch nào. Dùng
             // catch(Exception) cấu trúc thay vì rải Files.deleteIfExists() ở từng nhánh throw riêng lẻ,
@@ -154,7 +155,7 @@ public class BouncyCastlePgpDecryptionAdapter implements PgpDecryptionGatewayPor
             String companyCode)
             throws IOException, PGPException {
         try (InputStream literalIn = literalData.getInputStream();
-                OutputStream fileOut = Files.newOutputStream(decryptedFile)) {
+                OutputStream fileOut = Files.newOutputStream(decryptedFile, StandardOpenOption.WRITE)) {
             byte[] buffer = new byte[8192];
             int read;
             while ((read = literalIn.read(buffer)) >= 0) {
@@ -162,7 +163,6 @@ public class BouncyCastlePgpDecryptionAdapter implements PgpDecryptionGatewayPor
                 fileOut.write(buffer, 0, read);
             }
         }
-        setOwnerOnlyPermissionsIfSupported(decryptedFile);
 
         Object signatureObject = plainFactory.nextObject();
         if (!(signatureObject instanceof PGPSignatureList signatureList) || signatureList.isEmpty()) {
@@ -186,11 +186,20 @@ public class BouncyCastlePgpDecryptionAdapter implements PgpDecryptionGatewayPor
         return new ByteArrayInputStream(armored.getBytes(StandardCharsets.US_ASCII));
     }
 
-    private static void setOwnerOnlyPermissionsIfSupported(Path file) throws IOException {
+    /**
+     * Tạo file mới với permission chỉ owner mới đọc/ghi được (rw-------) NGAY TỪ LÚC TẠO - tránh
+     * khoảng hở giữa lúc file được tạo (umask mặc định của process, thường 0644 - world-readable)
+     * và lúc permission được siết lại, vì trong khoảng hở đó file đã chứa plaintext PII (payroll...)
+     * và bất kỳ local user nào khác cũng đọc được. Fallback về Files.createFile thường khi hệ điều
+     * hành không hỗ trợ POSIX permission (vd Windows).
+     */
+    private static Path createOwnerOnlyFile(Path dir, String fileName) throws IOException {
         try {
-            Files.setPosixFilePermissions(file, PosixFilePermissions.fromString("rw-------"));
+            return Files.createFile(
+                    dir.resolve(fileName),
+                    PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-------")));
         } catch (UnsupportedOperationException e) {
-            // Hệ điều hành không hỗ trợ POSIX permission (vd Windows) - bỏ qua, không phải lỗi.
+            return Files.createFile(dir.resolve(fileName));
         }
     }
 

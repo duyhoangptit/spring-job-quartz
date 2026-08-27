@@ -90,4 +90,20 @@ class CompanyPgpKeyConfigRepositoryAdapterTest {
 
         assertThat(adapter.findByCompanyCode("FPT_SOFTWARE")).isEmpty();
     }
+
+    @Test
+    void savingANewConfigForACompanyCodeThatWasPreviouslyDeletedSucceeds() {
+        adapter.save(
+                new CompanyPgpKeyConfig(UUID.randomUUID(), "FPT_SOFTWARE", "priv-v1", "pass-v1", "pub-v1", null, true));
+        adapter.delete("FPT_SOFTWARE");
+
+        CompanyPgpKeyConfig recreated =
+                new CompanyPgpKeyConfig(UUID.randomUUID(), "FPT_SOFTWARE", "priv-v2", "pass-v2", "pub-v2", null, true);
+        adapter.save(recreated);
+
+        assertThat(adapter.findByCompanyCode("FPT_SOFTWARE"))
+                .get()
+                .extracting(CompanyPgpKeyConfig::bankPrivateKeyArmored)
+                .isEqualTo("priv-v2");
+    }
 }
