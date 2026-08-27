@@ -74,6 +74,12 @@ app:
       skip-limit: 1000
       # Timeout dài hơn EOD vì xử lý khối lượng tương đương export (~30k dòng) qua 2 tasklet + 1 chunk step.
       execution-timeout: 15m
+  pgp:
+    # 256-bit key, base64. CHỈ dùng giá trị mẫu này cho local dev/test — đổi qua biến môi trường
+    # APP_PGP_MASTER-KEY (hoặc override application.yml) trước khi dùng ở môi trường thật.
+    master-key: 6XOHGExLShOjstzY7wYHtfAm+3NZppiNiCrNbqswRxo=
+    # Thư mục ghi file plaintext tạm sau khi decrypt - xoá ngay sau khi JobAction dùng xong.
+    temp-dir: ${java.io.tmpdir}
 
 management:
   endpoints:
