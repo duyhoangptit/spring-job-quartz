@@ -13,7 +13,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import com.system.reportjob.infrastructure.jobactions.batch.httpbatch.HttpCallJobAction;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.core.task.support.TaskExecutorAdapter;
@@ -24,6 +23,7 @@ import org.springframework.web.client.RestClient;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.system.reportjob.domain.model.JobDefinition;
+import com.system.reportjob.infrastructure.jobactions.batch.httpbatch.HttpCallJobAction;
 
 class HttpCallJobActionTest {
 

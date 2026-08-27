@@ -7,7 +7,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import com.system.reportjob.infrastructure.jobactions.JobAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -20,6 +19,7 @@ import org.springframework.web.client.RestClient;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.system.reportjob.domain.model.JobDefinition;
+import com.system.reportjob.infrastructure.jobactions.JobAction;
 
 @Component
 public class HttpCallJobAction implements JobAction {

@@ -30,7 +30,6 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.retry.RetryPolicy;
 import org.springframework.dao.DeadlockLoserDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.retry.policy.TimeoutRetryPolicy;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
@@ -177,7 +176,8 @@ public class PayrollBatchConfig {
         // Cấu hình Policy theo phong cách Spring Framework 7 mới nhất
         RetryPolicy retryPolicy = RetryPolicy.builder()
                 .maxRetries(3) // Thử lại tối đa 3 lần (Không tính lần chạy đầu)
-                .includes(Set.of(RemoteAccessException.class, DeadlockLoserDataAccessException.class)) // Các lỗi được phép retry
+                .includes(Set.of(
+                        RemoteAccessException.class, DeadlockLoserDataAccessException.class)) // Các lỗi được phép retry
                 .delay(Duration.ofSeconds(2)) // Đợi 2 giây trước khi thử lại
                 .build(); // Trả về đối tượng RetryPolicy chuẩn
 
