@@ -12,6 +12,8 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 
 import com.system.reportjob.domain.exception.JobDefinitionInUseException;
 import com.system.reportjob.domain.exception.JobDefinitionNotFoundException;
+import com.system.reportjob.domain.exception.PgpDecryptionFailedException;
+import com.system.reportjob.domain.exception.PgpKeyConfigNotFoundException;
 import com.system.reportjob.domain.exception.TaskNotFoundException;
 
 class GlobalExceptionHandlerTest {
@@ -84,5 +86,23 @@ class GlobalExceptionHandlerTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.METHOD_NOT_ALLOWED);
         assertThat(response.getBody().status()).isEqualTo(405);
+    }
+
+    @Test
+    void mapsPgpKeyConfigNotFoundTo404() {
+        ResponseEntity<ApiResponse<Object>> response =
+                handler.handleBusinessException(new PgpKeyConfigNotFoundException("FPT_SOFTWARE"));
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody().message()).contains("FPT_SOFTWARE");
+    }
+
+    @Test
+    void mapsPgpDecryptionFailedTo422() {
+        ResponseEntity<ApiResponse<Object>> response =
+                handler.handleBusinessException(new PgpDecryptionFailedException("FPT_SOFTWARE", "sai passphrase"));
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+        assertThat(response.getBody().message()).contains("FPT_SOFTWARE").contains("sai passphrase");
     }
 }
