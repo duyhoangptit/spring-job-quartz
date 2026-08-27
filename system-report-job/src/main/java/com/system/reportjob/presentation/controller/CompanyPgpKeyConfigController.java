@@ -1,4 +1,4 @@
-package com.system.reportjob.infrastructure.web.controller;
+package com.system.reportjob.presentation.controller;
 
 import java.util.List;
 
@@ -14,9 +14,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.system.reportjob.infrastructure.common.ApiResponse;
-import com.system.reportjob.infrastructure.web.dto.request.CreateCompanyPgpKeyConfigRequest;
-import com.system.reportjob.infrastructure.web.dto.request.UpdateCompanyPgpKeyConfigRequest;
-import com.system.reportjob.infrastructure.web.dto.response.CompanyPgpKeyConfigResponse;
+import com.system.reportjob.presentation.dto.request.CreateCompanyPgpKeyConfigRequest;
+import com.system.reportjob.presentation.dto.request.UpdateCompanyPgpKeyConfigRequest;
+import com.system.reportjob.presentation.dto.response.CompanyPgpKeyConfigResponse;
 import com.system.reportjob.usecase.ports.in.CompanyPgpKeyConfigUseCase;
 import com.system.reportjob.usecase.ports.in.CreateCompanyPgpKeyConfigCommand;
 import com.system.reportjob.usecase.ports.in.UpdateCompanyPgpKeyConfigCommand;

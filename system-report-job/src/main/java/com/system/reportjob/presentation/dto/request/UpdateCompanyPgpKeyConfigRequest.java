@@ -1,4 +1,4 @@
-package com.system.reportjob.infrastructure.web.dto.request;
+package com.system.reportjob.presentation.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 

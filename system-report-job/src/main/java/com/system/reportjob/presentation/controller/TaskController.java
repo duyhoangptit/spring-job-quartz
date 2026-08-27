@@ -1,4 +1,4 @@
-package com.system.reportjob.infrastructure.web.controller;
+package com.system.reportjob.presentation.controller;
 
 import java.util.UUID;
 
@@ -21,9 +21,9 @@ import com.system.reportjob.domain.model.TriggerDefinition;
 import com.system.reportjob.domain.model.TriggerType;
 import com.system.reportjob.infrastructure.common.ApiResponse;
 import com.system.reportjob.infrastructure.common.PageResponse;
-import com.system.reportjob.infrastructure.web.dto.request.CreateTaskRequest;
-import com.system.reportjob.infrastructure.web.dto.response.TaskDetailResponse;
-import com.system.reportjob.infrastructure.web.dto.response.TaskResponse;
+import com.system.reportjob.presentation.dto.request.CreateTaskRequest;
+import com.system.reportjob.presentation.dto.response.TaskDetailResponse;
+import com.system.reportjob.presentation.dto.response.TaskResponse;
 import com.system.reportjob.usecase.ports.in.CreateTaskCommand;
 import com.system.reportjob.usecase.ports.in.TaskManagementUseCase;
 

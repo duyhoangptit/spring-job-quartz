@@ -1,4 +1,4 @@
-package com.system.reportjob.infrastructure.web.dto.response;
+package com.system.reportjob.presentation.dto.response;
 
 import java.time.Instant;
 import java.util.UUID;

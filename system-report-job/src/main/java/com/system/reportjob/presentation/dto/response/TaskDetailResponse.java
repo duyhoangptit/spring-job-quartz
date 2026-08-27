@@ -1,4 +1,4 @@
-package com.system.reportjob.infrastructure.web.dto.response;
+package com.system.reportjob.presentation.dto.response;
 
 import com.system.reportjob.domain.model.TaskDetail;
 

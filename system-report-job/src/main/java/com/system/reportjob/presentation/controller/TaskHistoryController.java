@@ -1,4 +1,4 @@
-package com.system.reportjob.infrastructure.web.controller;
+package com.system.reportjob.presentation.controller;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,7 +10,7 @@ import com.system.reportjob.domain.model.PageResult;
 import com.system.reportjob.domain.model.TaskExecutionRecord;
 import com.system.reportjob.infrastructure.common.ApiResponse;
 import com.system.reportjob.infrastructure.common.PageResponse;
-import com.system.reportjob.infrastructure.web.dto.response.TaskExecutionHistoryResponse;
+import com.system.reportjob.presentation.dto.response.TaskExecutionHistoryResponse;
 import com.system.reportjob.usecase.ports.in.TaskHistoryQueryUseCase;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;

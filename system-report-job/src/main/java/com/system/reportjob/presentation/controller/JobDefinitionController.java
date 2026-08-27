@@ -1,4 +1,4 @@
-package com.system.reportjob.infrastructure.web.controller;
+package com.system.reportjob.presentation.controller;
 
 import java.util.UUID;
 
@@ -13,9 +13,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.system.reportjob.infrastructure.common.ApiResponse;
-import com.system.reportjob.infrastructure.web.dto.request.CreateJobDefinitionRequest;
-import com.system.reportjob.infrastructure.web.dto.request.UpdateJobDefinitionRequest;
-import com.system.reportjob.infrastructure.web.dto.response.JobDefinitionResponse;
+import com.system.reportjob.presentation.dto.request.CreateJobDefinitionRequest;
+import com.system.reportjob.presentation.dto.request.UpdateJobDefinitionRequest;
+import com.system.reportjob.presentation.dto.response.JobDefinitionResponse;
 import com.system.reportjob.usecase.ports.in.CreateJobDefinitionCommand;
 import com.system.reportjob.usecase.ports.in.JobDefinitionUseCase;
 import com.system.reportjob.usecase.ports.in.UpdateJobDefinitionCommand;
