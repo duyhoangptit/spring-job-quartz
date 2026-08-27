@@ -6,7 +6,11 @@ public enum ErrorCode {
     JOB_DEFINITION_NOT_FOUND("job_definition.not_found"),
     JOB_DEFINITION_IN_USE("job_definition.in_use"),
     CRON_INVALID("cron.invalid"),
-    VALIDATION_ERROR("validation.error");
+    VALIDATION_ERROR("validation.error"),
+    PGP_KEY_CONFIG_NOT_FOUND("pgp_key_config.not_found"),
+    PGP_KEY_CONFIG_ALREADY_EXISTS("pgp_key_config.already_exists"),
+    PGP_DECRYPTION_FAILED("pgp.decryption_failed"),
+    PGP_SIGNATURE_INVALID("pgp.signature_invalid");
 
     private final String messageKey;
 

@@ -70,9 +70,10 @@ public class GlobalExceptionHandler {
 
     private HttpStatus statusFor(ErrorCode errorCode) {
         return switch (errorCode) {
-            case TASK_NOT_FOUND, JOB_DEFINITION_NOT_FOUND -> HttpStatus.NOT_FOUND;
-            case JOB_DEFINITION_IN_USE, TASK_NOT_SCHEDULED -> HttpStatus.CONFLICT;
+            case TASK_NOT_FOUND, JOB_DEFINITION_NOT_FOUND, PGP_KEY_CONFIG_NOT_FOUND -> HttpStatus.NOT_FOUND;
+            case JOB_DEFINITION_IN_USE, TASK_NOT_SCHEDULED, PGP_KEY_CONFIG_ALREADY_EXISTS -> HttpStatus.CONFLICT;
             case CRON_INVALID, VALIDATION_ERROR -> HttpStatus.BAD_REQUEST;
+            case PGP_DECRYPTION_FAILED, PGP_SIGNATURE_INVALID -> HttpStatus.UNPROCESSABLE_ENTITY;
         };
     }
 

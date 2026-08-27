@@ -1,5 +1,7 @@
 package com.system.reportjob.infrastructure.jobactions.batch.payroll;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -24,6 +26,7 @@ import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.system.reportjob.domain.model.JobDefinition;
 import com.system.reportjob.infrastructure.jobactions.JobAction;
+import com.system.reportjob.usecase.ports.in.DecryptCompanyFileUseCase;
 import com.system.reportjob.usecase.ports.in.HolidayQueryUseCase;
 
 /**
@@ -42,6 +45,7 @@ public class PayrollJobAction implements JobAction {
     private final Job fptPayrollJob;
     private final HolidayQueryUseCase holidayQueryUseCase;
     private final ObjectMapper objectMapper;
+    private final DecryptCompanyFileUseCase decryptCompanyFileUseCase;
     private final AsyncTaskExecutor jobActionTaskExecutor;
     private final Duration executionTimeout;
 
@@ -50,12 +54,14 @@ public class PayrollJobAction implements JobAction {
             Job fptPayrollJob,
             HolidayQueryUseCase holidayQueryUseCase,
             ObjectMapper objectMapper,
+            DecryptCompanyFileUseCase decryptCompanyFileUseCase,
             @Qualifier("jobActionTaskExecutor") AsyncTaskExecutor jobActionTaskExecutor,
             @Value("${app.batch.payroll.execution-timeout:15m}") Duration executionTimeout) {
         this.jobOperator = jobOperator;
         this.fptPayrollJob = fptPayrollJob;
         this.holidayQueryUseCase = holidayQueryUseCase;
         this.objectMapper = objectMapper;
+        this.decryptCompanyFileUseCase = decryptCompanyFileUseCase;
         this.jobActionTaskExecutor = jobActionTaskExecutor;
         this.executionTimeout = executionTimeout;
     }
@@ -125,28 +131,43 @@ public class PayrollJobAction implements JobAction {
 
     private Void runJob(JobDefinition definition, PayrollExpression expression, LocalDate targetPayDate)
             throws Exception {
-        String csvFilePath = expression.csvDirectory() + "/FPT_PAYROLL_" + targetPayDate + ".csv";
+        String baseFileName = "FPT_PAYROLL_" + targetPayDate;
+        boolean pgpEncrypted = Boolean.TRUE.equals(expression.pgpEncrypted());
+        Path sourcePath = Path.of(expression.csvDirectory(), baseFileName + (pgpEncrypted ? ".csv.pgp" : ".csv"));
 
-        JobParameters jobParameters = new JobParametersBuilder()
-                .addString("companyCode", expression.companyCode())
-                .addString("targetPayDate", targetPayDate.toString())
-                .addString("csvFilePath", csvFilePath)
-                .addLong("runAt", System.currentTimeMillis())
-                .toJobParameters();
+        Path csvFilePath =
+                pgpEncrypted ? decryptCompanyFileUseCase.decryptFile(expression.companyCode(), sourcePath) : sourcePath;
+        try {
+            JobParameters jobParameters = new JobParametersBuilder()
+                    .addString("companyCode", expression.companyCode())
+                    .addString("targetPayDate", targetPayDate.toString())
+                    .addString("csvFilePath", csvFilePath.toString())
+                    .addLong("runAt", System.currentTimeMillis())
+                    .toJobParameters();
 
-        JobExecution execution = jobOperator.start(fptPayrollJob, jobParameters);
-        if (execution.getStatus() != BatchStatus.COMPLETED) {
-            throw new IllegalStateException("BANK_SALARY_PAYROLL batch job kết thúc với trạng thái "
-                    + execution.getStatus() + ": " + definition.id());
+            JobExecution execution = jobOperator.start(fptPayrollJob, jobParameters);
+            if (execution.getStatus() != BatchStatus.COMPLETED) {
+                throw new IllegalStateException("BANK_SALARY_PAYROLL batch job kết thúc với trạng thái "
+                        + execution.getStatus() + ": " + definition.id());
+            }
+            log.info(
+                    "BANK_SALARY_PAYROLL job {} hoàn tất cho kỳ lương {}, exitStatus={}",
+                    definition.id(),
+                    targetPayDate,
+                    execution.getExitStatus());
+            return null;
+        } finally {
+            if (pgpEncrypted) {
+                Files.deleteIfExists(csvFilePath);
+            }
         }
-        log.info(
-                "BANK_SALARY_PAYROLL job {} hoàn tất cho kỳ lương {}, exitStatus={}",
-                definition.id(),
-                targetPayDate,
-                execution.getExitStatus());
-        return null;
     }
 
     record PayrollExpression(
-            String companyCode, String csvDirectory, String countryCode, String branchId, Integer payDayOfMonth) {}
+            String companyCode,
+            String csvDirectory,
+            String countryCode,
+            String branchId,
+            Integer payDayOfMonth,
+            Boolean pgpEncrypted) {}
 }
